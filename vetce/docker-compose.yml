@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: vetce-db
+    environment:
+      POSTGRES_USER: vetce
+      POSTGRES_PASSWORD: vetce_dev
+      POSTGRES_DB: vetce
+    ports:
+      - "5432:5432"
+    volumes:
+      - vetce_pgdata:/var/lib/postgresql/data
+
+volumes:
+  vetce_pgdata: 
