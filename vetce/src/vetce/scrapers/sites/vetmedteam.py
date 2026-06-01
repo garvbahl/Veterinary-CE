@@ -217,8 +217,8 @@ def scrape() -> Iterable[RawListing]:
 
 if __name__ == "__main__":
     from vetce.logging import configure_logging
-    configure_logging()
+    from vetce.pipeline.ingest import run_ingest
 
-    for listing in scrape():
-        print(listing)
-        print("-" * 80)
+    configure_logging()
+    counts = run_ingest(scrape, source_slug="vetmedteam_free")
+    print(f"\nDone: {counts}")
