@@ -36,3 +36,23 @@ Requires sign in so does not work
 - Has sponsor field (Zoetis, Merck) — possible new schema column later
 - Has multi-module programs (OA, Itchy Dog) — listings are individual modules
 - Decision: GOOD second-scraper candidate. Differs meaningfully from VetMedTeam.
+
+## Tufts Cummings School CE
+
+- URL: https://vet.tufts.edu/events?trumbaEmbed=filterview%3DDepArea-ContEd (events calendar)
+- URL: https://vet.tufts.edu/continuing-education-programs (programs hub - pending check)
+- Shape: A — events embedded via Trumba (3rd party)
+- Events calendar: JS-rendered, skip for now
+- Has real dates, multi-day events, mix of free/paid — high-value target
+- Decision: SKIP for now. Revisit in Phase 4+ via Playwright OR Trumba RSS feed
+  (try https://www.trumba.com/calendars/tufts-vet.rss or similar)
+
+  ## Cornell Sim Lab (cornellsimlab.org)
+
+- URL: https://www.cornellsimlab.org/courses-vets
+- URL: https://www.cornellsimlab.org/courses-techs
+- URL: https://www.cornellsimlab.org/upcoming
+- Linked from: vet.cornell.edu CE page (separate property)
+- Shape: A — needs static/JS check
+- Decision: Phase 3.5+ candidate. Different stack from main Cornell page.
+  Likely another university-hosted catalog. Worth a 10-min recon later.

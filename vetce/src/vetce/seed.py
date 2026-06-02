@@ -43,6 +43,21 @@ SEED_DATA = [
                 "description": "NAVTA Continuing Education home page (ce.navta.net)",
             },
         ],
+        
+    },
+    {
+        "provider": {
+            "slug": "cornell_cvm",
+            "name": "Cornell CVM",
+            "website": "https://www.vet.cornell.edu",
+        },
+        "sources": [
+            {
+                "slug": "cornell_cvm_conferences",
+                "kind": "scraper",
+                "description": "Cornell College of Veterinary Medicine — 2026 Conferences page",
+            },
+        ],
     },
 ]
 
