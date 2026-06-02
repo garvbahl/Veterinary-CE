@@ -30,6 +30,20 @@ SEED_DATA = [
             },
         ],
     },
+    {
+        "provider": {
+            "slug": "navta",
+            "name": "NAVTA",
+            "website": "https://ce.navta.net",
+        },
+        "sources": [
+            {
+                "slug": "navta_ce",
+                "kind": "scraper",
+                "description": "NAVTA Continuing Education home page (ce.navta.net)",
+            },
+        ],
+    },
 ]
 
 
