@@ -104,7 +104,27 @@ def run_ingest(
             )
             session.commit()
 
-        # 3. Decide success vs partial based on error count.
+        # 3. Run quality checks scoped to this source. Failures here
+        # are LOGGED but do not block — the data is already persisted,
+        # we just want a human to know if something looks off.
+        try:
+            from vetce.quality import run_checks
+            issues = run_checks(source_slug=source_slug)
+            if issues:
+                log.warning(
+                    "ingest_quality_issues",
+                    source=source_slug,
+                    issue_count=len(issues),
+                )
+        except Exception as qc_err:
+            # Don't let a broken quality check kill the ingest run.
+            log.error(
+                "ingest_quality_checks_failed",
+                source=source_slug,
+                error=f"{type(qc_err).__name__}: {qc_err}",
+            )
+
+        # 4. Decide success vs partial based on error count.
         if counts.get("errors", 0) > 0:
             status = "partial"
         else:
