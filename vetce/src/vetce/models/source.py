@@ -30,3 +30,10 @@ class Source(Base):
     # Relationships
     provider: Mapped["Provider"] = relationship(back_populates="sources")
     listings: Mapped[list["Listing"]] = relationship(back_populates="source")
+    runs: Mapped[list["ScrapeRun"]] = relationship(
+        back_populates="source",
+        cascade="all, delete-orphan",
+    )
+    cron_expression: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )

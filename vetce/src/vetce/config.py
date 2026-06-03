@@ -6,5 +6,6 @@ class Settings(BaseSettings):
     database_url: str
     log_level: str = "INFO"
     user_agent: str = "VetCEBot/0.1"
+    scheduler_mode: str = "prod"  # "prod" or "dev"
 
 settings = Settings()

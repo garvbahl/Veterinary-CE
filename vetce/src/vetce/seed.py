@@ -27,6 +27,7 @@ SEED_DATA = [
                 "slug": "vetmedteam_free",
                 "kind": "scraper",
                 "description": "VetMedTeam free courses listing (classes-free.aspx)",
+                "cron_expression": "0 3 * * *",  # daily at 03:00 UTC
             },
         ],
     },
@@ -41,6 +42,7 @@ SEED_DATA = [
                 "slug": "navta_ce",
                 "kind": "scraper",
                 "description": "NAVTA Continuing Education home page (ce.navta.net)",
+                "cron_expression": "0 3 * * *",  # daily at 03:00 UTC
             },
         ],
         
@@ -56,6 +58,7 @@ SEED_DATA = [
                 "slug": "cornell_cvm_conferences",
                 "kind": "scraper",
                 "description": "Cornell College of Veterinary Medicine — 2026 Conferences page",
+                "cron_expression": "0 3 * * *",  # daily at 03:00 UTC
             },
         ],
     },
@@ -80,6 +83,9 @@ def seed() -> None:
                 log.info("provider_exists", slug=provider.slug, id=provider.id)
 
             # Find or create each source under this provider.
+            # Find or create each source under this provider.
+            # For existing sources, refresh mutable fields (like cron_expression)
+            # so changes to SEED_DATA propagate without needing a manual update.
             for source_data in entry["sources"]:
                 source = session.scalar(
                     select(Source).where(Source.slug == source_data["slug"])
@@ -87,10 +93,14 @@ def seed() -> None:
                 if source is None:
                     source = Source(provider_id=provider.id, **source_data)
                     session.add(source)
-                    log.info("source_created", slug=source.slug)
+                    log.info("source_created", slug=source.slug,
+                             cron=source_data.get("cron_expression"))
                 else:
-                    log.info("source_exists", slug=source.slug, id=source.id)
-
+                    # Refresh mutable fields from seed.
+                    source.cron_expression = source_data.get("cron_expression")
+                    source.description = source_data.get("description")
+                    log.info("source_exists", slug=source.slug, id=source.id,
+                             cron=source.cron_expression)
         session.commit()
         log.info("seed_complete")
 

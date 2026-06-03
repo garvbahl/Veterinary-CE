@@ -2,5 +2,6 @@
 from vetce.models.provider import Provider
 from vetce.models.source import Source
 from vetce.models.listing import Listing
+from vetce.models.scrape_run import ScrapeRun
 
-__all__ = ["Provider", "Source", "Listing"]
+__all__ = ["Provider", "Source", "Listing", "ScrapeRun"]
