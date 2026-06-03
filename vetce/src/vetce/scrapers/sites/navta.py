@@ -12,18 +12,16 @@ from __future__ import annotations
 
 import json
 import re
-from decimal import Decimal
 from typing import Iterable
 
 import httpx
 
-from vetce.config import settings
 from vetce.logging import log
-from vetce.pipeline.ingest import run_ingest
+from vetce.scrapers.base import BaseScraper
 from vetce.scrapers.types import RawListing
 
-SOURCE_SLUG = "navta_ce"
-LISTINGS_URL = "https://ce.navta.net/"
+
+# ---- Module-level parsers (kept as functions, not methods) ----
 
 # Match the embedded JS variable. The data is in single quotes after
 # `var courseData = `. Single quotes inside the JSON are escaped as \'.
@@ -32,14 +30,6 @@ _COURSE_DATA_RE = re.compile(
     r"var\s+courseData\s*=\s*'(?P<json>.*?)';",
     re.DOTALL,
 )
-
-
-def _client() -> httpx.Client:
-    return httpx.Client(
-        headers={"User-Agent": settings.user_agent},
-        timeout=20.0,
-        follow_redirects=True,
-    )
 
 
 def _extract_course_data(html: str) -> list[dict]:
@@ -96,15 +86,7 @@ def _to_credit_hours(value) -> float | None:
 
 
 def _course_to_raw_listing(course: dict) -> RawListing | None:
-    """Map one NAVTA course dict to a RawListing.
-
-    NAVTA's data shape:
-      - id_course: int — unique numeric ID
-      - title: short internal name (e.g. "NAVTA CE OA Module 1")
-      - description: JSON string with nested fields (title, subtitle,
-        blurb, credits, sponsor, ceavailability, ...)
-      - thumbnail: URL (we ignore for now)
-    """
+    """Map one NAVTA course dict to a RawListing."""
     course_id = course.get("id_course")
     if not course_id:
         log.warning("navta_course_missing_id", course=course)
@@ -136,11 +118,8 @@ def _course_to_raw_listing(course: dict) -> RawListing | None:
 
     # Synthetic URL — NAVTA's actual detail pages are login-walled,
     # so we use the homepage with a fragment as the canonical reference.
-    # source_url MUST be unique per listing (it's our identity key),
-    # so we include the course id in the fragment.
     source_url = f"https://ce.navta.net/#course-{course_id}"
 
-    # Description: if we have a blurb, prefix with sponsor/availability info.
     description_parts = []
     if blurb:
         description_parts.append(blurb)
@@ -151,42 +130,44 @@ def _course_to_raw_listing(course: dict) -> RawListing | None:
     description = "\n\n".join(description_parts) if description_parts else None
 
     return RawListing(
-        source_slug=SOURCE_SLUG,
+        source_slug=NavtaScraper.SOURCE_SLUG,
         source_url=source_url,
         title=title,
-        provider="NAVTA",
+        provider=NavtaScraper.PROVIDER_NAME,
         description=description,
-        format="on_demand",        # all NAVTA modules are self-paced
-        cost="Free",               # all are free (CE credit at no cost)
-        race_approved=None,        # not directly stated in JSON; leave honest
+        format="on_demand",
+        cost="Free",
+        race_approved=None,
         credit_hours=credits,
         audience=audience,
         registration_url="https://ce.navta.net/",
     )
 
 
-def scrape() -> Iterable[RawListing]:
-    """Main entry point. Yields one RawListing per NAVTA course."""
-    with _client() as client:
-        log.info("fetch", url=LISTINGS_URL)
-        resp = client.get(LISTINGS_URL)
-        resp.raise_for_status()
-        html = resp.text
+# ---- The scraper class itself ----
 
-    courses = _extract_course_data(html)
-    log.info("navta_courses_found", count=len(courses))
+class NavtaScraper(BaseScraper):
+    SOURCE_SLUG = "navta_ce"
+    PROVIDER_NAME = "NAVTA"
+    LISTINGS_URL = "https://ce.navta.net/"
+    # REQUEST_DELAY inherits the base default of 0 — single fetch, no follow-ups.
 
-    for i, course in enumerate(courses, start=1):
-        listing = _course_to_raw_listing(course)
-        if listing is None:
-            continue
-        log.info("navta_course_parsed", n=i, id=course.get("id_course"),
-                 title=listing.title, credits=listing.credit_hours)
-        yield listing
+    def extract_listings(
+        self, listings_html: str, client: httpx.Client
+    ) -> Iterable[RawListing]:
+        # client is unused here — NAVTA needs no detail-page fetches.
+        # We keep the parameter for signature uniformity with other scrapers.
+        courses = _extract_course_data(listings_html)
+        log.info("navta_courses_found", count=len(courses))
+
+        for i, course in enumerate(courses, start=1):
+            listing = _course_to_raw_listing(course)
+            if listing is None:
+                continue
+            log.info("navta_course_parsed", n=i, id=course.get("id_course"),
+                     title=listing.title, credits=listing.credit_hours)
+            yield listing
 
 
 if __name__ == "__main__":
-    from vetce.logging import configure_logging
-    configure_logging()
-    counts = run_ingest(scrape, source_slug=SOURCE_SLUG)
-    print(f"\nDone: {counts}")
+    NavtaScraper().run()

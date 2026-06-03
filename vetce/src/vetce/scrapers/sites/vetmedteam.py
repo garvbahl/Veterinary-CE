@@ -15,39 +15,20 @@ section text and pull fields out by regex.
 from __future__ import annotations
 
 import re
-import time
 from typing import Iterable
 
 import httpx
 from selectolax.parser import HTMLParser
 
-from vetce.config import settings
 from vetce.logging import log
+from vetce.scrapers.base import BaseScraper
 from vetce.scrapers.types import RawListing
 
-SOURCE_SLUG = "vetmedteam"
-LISTINGS_URL = "https://www.vetmedteam.com/classes-free.aspx"
-REQUEST_DELAY_SECONDS = 1.5  # be polite — one request per ~1.5s
 
+# ---- Module-level parsers (kept as functions, not methods) ----
 
-def _client() -> httpx.Client:
-    """Build an HTTP client with our identifying User-Agent and a sane timeout."""
-    return httpx.Client(
-        headers={"User-Agent": settings.user_agent},
-        timeout=20.0,
-        follow_redirects=True,
-    )
-
-
-def _fetch(url: str, client: httpx.Client) -> str:
-    log.info("fetch", url=url)
-    resp = client.get(url)
-    resp.raise_for_status()
-    return resp.text
-
-
-def parse_listings(html: str) -> list[tuple[str, str | None, str]]:
-    """Return [(title, short_description, detail_url), ...] from the listings page."""
+def _parse_listing_cells(html: str) -> list[tuple[str, str | None, str]]:
+    """Return [(title, short_description, detail_url), ...] from the index page."""
     tree = HTMLParser(html)
     out: list[tuple[str, str | None, str]] = []
 
@@ -69,7 +50,6 @@ def parse_listings(html: str) -> list[tuple[str, str | None, str]]:
             log.warning("listing_cell_no_href", title=title)
             continue
 
-        # description is the *other* span in the cell (the one without the title class)
         description: str | None = None
         for span in cell.css("span"):
             classes = span.attributes.get("class", "") or ""
@@ -85,27 +65,21 @@ def parse_listings(html: str) -> list[tuple[str, str | None, str]]:
     return out
 
 
-# regex patterns for the detail page
 _RE_RACE_HOURS = re.compile(r"(\d+(?:\.\d+)?)\s*RACE\s*hours?", re.IGNORECASE)
 _RE_PROGRAM_NUMBER = re.compile(r"Program\s*Number\s*([0-9A-Za-z\-]+)", re.IGNORECASE)
 _RE_SUBJECT = re.compile(r"RACE\s*Subject\s*Category\s*:\s*([^;]+)", re.IGNORECASE)
 _RE_DELIVERY = re.compile(r"Delivery\s*Method\s*:\s*([^;]+?)(?:;|$)", re.IGNORECASE)
 
 
-def parse_detail(url: str, html: str,
-                 fallback_title: str, fallback_description: str | None) -> RawListing:
-    """Parse one detail page into a RawListing.
-
-    The page is structured as repeating <div class="course-detail-section"> blocks.
-    We don't know which section contains which info, so we concatenate the
-    text of all sections and pull fields by regex.
-    """
+def _parse_detail(url: str, html: str,
+                  fallback_title: str,
+                  fallback_description: str | None) -> RawListing:
+    """Parse one detail page into a RawListing."""
     tree = HTMLParser(html)
 
     sections = tree.css("div.course-detail-section")
     combined_text = "\n\n".join(s.text(separator=" ", strip=True) for s in sections)
 
-    # ---- RACE info ----
     race_approved: bool | None = None
     credit_hours: float | None = None
     race_program_number: str | None = None
@@ -135,7 +109,6 @@ def parse_detail(url: str, html: str,
     if m:
         delivery_method = m.group(1).strip()
 
-    # crude audience detection from a likely section header
     lowered = combined_text.lower()
     if "vets and techs" in lowered or "veterinarians and veterinary technicians" in lowered:
         audience = "vets and techs"
@@ -144,27 +117,20 @@ def parse_detail(url: str, html: str,
     elif "technicians" in lowered or "techs" in lowered:
         audience = "techs"
 
-    # ---- Presenter ----
     presenter: str | None = None
-    # find the section whose header is "Content Presenter"
     for sec in sections:
         text = sec.text(separator=" ", strip=True)
         if text.lower().startswith("content presenter"):
-            # text looks like "Content Presenter Lauren Forsythe, PharmD, ..."
             presenter = text.replace("Content Presenter", "", 1).strip()
             break
 
-    # ---- Description ----
     description: str | None = fallback_description
     for sec in sections:
         text = sec.text(separator=" ", strip=True)
         if "Course Focus and Learning Objectives" in text:
-            # strip the header out, keep the rest
             description = text.split("Course Focus and Learning Objectives", 1)[1].strip()
             break
 
-    # ---- Title ----
-    # try page <h1> or <title> if available; else use the title from the listings page
     title: str = fallback_title
     h1 = tree.css_first("h1")
     if h1:
@@ -172,17 +138,16 @@ def parse_detail(url: str, html: str,
         if candidate:
             title = candidate
 
-    # all VetMedTeam free courses are on-demand self-study; webinars are separate
     fmt = "on_demand" if "self-study" in lowered else None
 
     return RawListing(
-        source_slug=SOURCE_SLUG,
+        source_slug=VetMedTeamScraper.SOURCE_SLUG,
         source_url=url,
         title=title,
-        provider="VetMedTeam",
+        provider=VetMedTeamScraper.PROVIDER_NAME,
         description=description,
         format=fmt,
-        cost="Free",  # listings page is /classes-free.aspx — guaranteed free
+        cost="Free",
         race_approved=race_approved,
         race_program_number=race_program_number,
         credit_hours=credit_hours,
@@ -194,20 +159,26 @@ def parse_detail(url: str, html: str,
     )
 
 
-def scrape() -> Iterable[RawListing]:
-    """Main entry point. Yields RawListing objects, one per course."""
-    with _client() as client:
-        listings_html = _fetch(LISTINGS_URL, client)
-        items = parse_listings(listings_html)
+# ---- The scraper class itself ----
+
+class VetMedTeamScraper(BaseScraper):
+    SOURCE_SLUG = "vetmedteam_free"
+    PROVIDER_NAME = "VetMedTeam"
+    LISTINGS_URL = "https://www.vetmedteam.com/classes-free.aspx"
+    REQUEST_DELAY = 1.5  # be polite — per-request delay across detail pages
+
+    def extract_listings(
+        self, listings_html: str, client: httpx.Client
+    ) -> Iterable[RawListing]:
+        items = _parse_listing_cells(listings_html)
         log.info("listings_parsed", count=len(items))
 
         for i, (title, short_desc, detail_url) in enumerate(items, start=1):
             try:
-                time.sleep(REQUEST_DELAY_SECONDS)  # be a polite citizen
-                detail_html = _fetch(detail_url, client)
-                listing = parse_detail(detail_url, detail_html,
-                                       fallback_title=title,
-                                       fallback_description=short_desc)
+                detail_html = self.fetch(detail_url, client)
+                listing = _parse_detail(detail_url, detail_html,
+                                        fallback_title=title,
+                                        fallback_description=short_desc)
                 log.info("course_parsed", n=i, title=listing.title,
                          credits=listing.credit_hours)
                 yield listing
@@ -216,9 +187,4 @@ def scrape() -> Iterable[RawListing]:
 
 
 if __name__ == "__main__":
-    from vetce.logging import configure_logging
-    from vetce.pipeline.ingest import run_ingest
-
-    configure_logging()
-    counts = run_ingest(scrape, source_slug="vetmedteam_free")
-    print(f"\nDone: {counts}")
+    VetMedTeamScraper().run()

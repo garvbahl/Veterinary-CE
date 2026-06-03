@@ -26,17 +26,13 @@ from typing import Iterable
 import httpx
 from selectolax.parser import HTMLParser, Node
 
-from vetce.config import settings
 from vetce.logging import log
-from vetce.pipeline.ingest import run_ingest
+from vetce.scrapers.base import BaseScraper
 from vetce.scrapers.types import RawListing
 
-SOURCE_SLUG = "cornell_cvm_conferences"
-LISTINGS_URL = (
-    "https://www.vet.cornell.edu/education/"
-    "educational-support-services/continuing-education"
-)
+
 SECTION_HEADER_TEXT = "2026 Conferences"  # update yearly
+
 
 # ---------- Date parsing ----------
 
@@ -75,11 +71,10 @@ def _parse_dates(text: str) -> tuple[date | None, date | None]:
 
     cleaned = text.strip().replace("–", "-").replace("—", "-")
 
-    # Try cross-month/year first since it's more specific
     m = _RE_CROSS_MONTH.match(cleaned)
     if m:
         start_month, start_day, start_year, end_month, end_day, end_year = m.groups()
-        start_year = start_year or end_year  # if start year missing, use end year
+        start_year = start_year or end_year
         try:
             start = date(int(start_year), _MONTHS[start_month.lower()], int(start_day))
             end = date(int(end_year), _MONTHS[end_month.lower()], int(end_day))
@@ -115,9 +110,6 @@ def _parse_dates(text: str) -> tuple[date | None, date | None]:
 
 # ---------- CE credits / audience parsing ----------
 
-# "Pending approval for 8 CE credits for veterinarians"
-# "15.5 CE credits for veterinarians and veterinary technicians"
-# "up to 21 credits during the live event"
 _RE_CREDITS = re.compile(r"(\d+(?:\.\d+)?)\s*(?:CE\s+)?credits?", re.IGNORECASE)
 
 
@@ -188,7 +180,6 @@ def _extract_conferences(html: str) -> list[dict]:
     """Walk the page and return one dict per conference in the target section."""
     tree = HTMLParser(html)
 
-    # Find the section anchor: an <h2> whose text contains "2026 Conferences"
     section_h2: Node | None = None
     for h2 in tree.css("h2"):
         if SECTION_HEADER_TEXT.lower() in h2.text(strip=True).lower():
@@ -197,8 +188,6 @@ def _extract_conferences(html: str) -> list[dict]:
     if section_h2 is None:
         raise ValueError(f"Could not find section header {SECTION_HEADER_TEXT!r}")
 
-    # Walk forward through siblings collecting <h3> + next <ul> pairs.
-    # Stop when we hit another <h2> (next section).
     conferences: list[dict] = []
     current_title: str | None = None
 
@@ -211,8 +200,7 @@ def _extract_conferences(html: str) -> list[dict]:
             current_title = node.text(strip=True)
         elif tag == "ul" and current_title:
             fields = _bullets_to_fields(node)
-            # A real conference has at least a "dates:" bullet. Anything else
-            # is a non-conference subsection (e.g., the Sim Lab link block).
+            # A real conference has at least a "dates:" bullet.
             if "dates" not in fields:
                 log.info("cornell_skipped_non_conference",
                          title=current_title)
@@ -225,7 +213,7 @@ def _extract_conferences(html: str) -> list[dict]:
                 "fields": fields,
                 "registration_url": registration_url,
             })
-            current_title = None  # consumed
+            current_title = None
         node = node.next
 
     return conferences
@@ -236,7 +224,7 @@ def _extract_conferences(html: str) -> list[dict]:
 def _conference_to_raw_listing(conf: dict) -> RawListing | None:
     title = conf.get("title", "").strip()
     if not title:
-        return None  # skip empty <h3>s
+        return None
 
     fields = conf.get("fields", {})
     starts_at, ends_at = _parse_dates(fields.get("dates", ""))
@@ -252,65 +240,59 @@ def _conference_to_raw_listing(conf: dict) -> RawListing | None:
         description_parts.append(f"CE Credits: {fields['ce credits']}")
     description = "\n".join(description_parts) if description_parts else None
 
-    # Use Cornell page URL + slugified title as the unique source_url.
     slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
-    source_url = f"{LISTINGS_URL}#{slug}"
+    source_url = f"{CornellCvmScraper.LISTINGS_URL}#{slug}"
 
     return RawListing(
-        source_slug=SOURCE_SLUG,
+        source_slug=CornellCvmScraper.SOURCE_SLUG,
         source_url=source_url,
         title=title,
-        provider="Cornell CVM",
+        provider=CornellCvmScraper.PROVIDER_NAME,
         description=description,
         starts_at=starts_at,
         ends_at=ends_at,
         format=fmt,
-        cost=None,  # not explicitly stated; honest absence
-        race_approved=None,  # not stated on hub page
+        cost=None,
+        race_approved=None,
         credit_hours=credit_hours,
         audience=audience,
         registration_url=conf.get("registration_url"),
     )
 
 
-# ---------- Entry point ----------
+# ---- The scraper class itself ----
 
-def _client() -> httpx.Client:
-    return httpx.Client(
-        headers={"User-Agent": settings.user_agent},
-        timeout=20.0,
-        follow_redirects=True,
+class CornellCvmScraper(BaseScraper):
+    SOURCE_SLUG = "cornell_cvm_conferences"
+    PROVIDER_NAME = "Cornell CVM"
+    LISTINGS_URL = (
+        "https://www.vet.cornell.edu/education/"
+        "educational-support-services/continuing-education"
     )
+    # REQUEST_DELAY inherits the base default of 0 — single fetch, no follow-ups.
 
+    def extract_listings(
+        self, listings_html: str, client: httpx.Client
+    ) -> Iterable[RawListing]:
+        # client is unused — Cornell needs no detail-page fetches.
+        conferences = _extract_conferences(listings_html)
+        log.info("cornell_conferences_found", count=len(conferences))
 
-def scrape() -> Iterable[RawListing]:
-    with _client() as client:
-        log.info("fetch", url=LISTINGS_URL)
-        resp = client.get(LISTINGS_URL)
-        resp.raise_for_status()
-        html = resp.text
-
-    conferences = _extract_conferences(html)
-    log.info("cornell_conferences_found", count=len(conferences))
-
-    for i, conf in enumerate(conferences, start=1):
-        listing = _conference_to_raw_listing(conf)
-        if listing is None:
-            log.info("cornell_skipped_empty_title", n=i)
-            continue
-        log.info(
-            "cornell_conference_parsed",
-            n=i,
-            title=listing.title,
-            starts_at=str(listing.starts_at),
-            credits=listing.credit_hours,
-            audience=listing.audience,
-        )
-        yield listing
+        for i, conf in enumerate(conferences, start=1):
+            listing = _conference_to_raw_listing(conf)
+            if listing is None:
+                log.info("cornell_skipped_empty_title", n=i)
+                continue
+            log.info(
+                "cornell_conference_parsed",
+                n=i,
+                title=listing.title,
+                starts_at=str(listing.starts_at),
+                credits=listing.credit_hours,
+                audience=listing.audience,
+            )
+            yield listing
 
 
 if __name__ == "__main__":
-    from vetce.logging import configure_logging
-    configure_logging()
-    counts = run_ingest(scrape, source_slug=SOURCE_SLUG)
-    print(f"\nDone: {counts}")
+    CornellCvmScraper().run()
