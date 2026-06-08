@@ -5,6 +5,7 @@ Responsibilities:
 - Upsert listings using source_url as the identity key.
 - Maintain last_seen_at on every persist call.
 - Sanitize obviously bad values before inserting.
+- Mark exact-match duplicates (same title + starts_at) post-insert.
 """
 from __future__ import annotations
 
@@ -13,12 +14,12 @@ import re
 from decimal import Decimal
 from typing import Iterable
 
-from sqlalchemy import select, func, literal_column
+from sqlalchemy import and_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from vetce.logging import log
-from vetce.models import Provider, Source, Listing
+from vetce.models import Listing, Provider, Source
 from vetce.scrapers.types import RawListing
 
 
@@ -39,7 +40,7 @@ def _sanitize_race_number(value: str | None) -> str | None:
 def _to_decimal(value: float | int | None) -> Decimal | None:
     if value is None:
         return None
-    return Decimal(str(value))  # via str() to avoid float-binary noise
+    return Decimal(str(value))
 
 
 def _hash_html(html: str | None) -> str | None:
@@ -70,8 +71,13 @@ def _resolve_source(session: Session, slug: str) -> Source:
     return source
 
 
-def persist_listing(session: Session, raw: RawListing, *,
-                    source_slug: str, raw_html: str | None = None) -> tuple[int, bool]:
+def persist_listing(
+    session: Session,
+    raw: RawListing,
+    *,
+    source_slug: str,
+    raw_html: str | None = None,
+) -> tuple[int, bool]:
     """Upsert a single RawListing into the database.
 
     Returns (listing_id, was_inserted). was_inserted is True if a new row was
@@ -104,11 +110,9 @@ def persist_listing(session: Session, raw: RawListing, *,
         "status": "active",
     }
 
-    from sqlalchemy import literal_column
-
     stmt = pg_insert(Listing).values(**values)
     update_cols = {col: stmt.excluded[col] for col in values if col != "source_url"}
-    update_cols["last_seen_at"] = func.now()  # explicit; don't rely on excluded
+    update_cols["last_seen_at"] = func.now()
     stmt = stmt.on_conflict_do_update(
         index_elements=["source_url"],
         set_=update_cols,
@@ -120,10 +124,77 @@ def persist_listing(session: Session, raw: RawListing, *,
     return listing_id, was_inserted
 
 
-def persist_listings(session: Session, listings: Iterable[RawListing], *,
-                     source_slug: str) -> dict[str, int]:
+def _mark_duplicates(session: Session, source_slug: str) -> None:
+    """Identify exact-match duplicates among listings for this source.
+
+    Two listings are duplicates if they share the same title AND same starts_at
+    (both non-null). The older row (lower id) is canonical; newer rows get
+    duplicate_of set to the canonical's id.
+
+    Rows from this source are checked against ALL listings in the database,
+    not just other rows from this source.
+    """
+    source = session.scalar(select(Source).where(Source.slug == source_slug))
+    if source is None:
+        log.warning("mark_duplicates_unknown_source", source_slug=source_slug)
+        return
+
+    # All listings from this source that have a starts_at — candidates for dedup.
+    candidates = session.scalars(
+        select(Listing).where(
+            and_(
+                Listing.source_id == source.id,
+                Listing.starts_at.is_not(None),
+            )
+        )
+    ).all()
+
+    marked = 0
+    for candidate in candidates:
+        # Find the oldest canonical row matching this (title, starts_at).
+        canonical = session.scalar(
+            select(Listing)
+            .where(
+                and_(
+                    Listing.title == candidate.title,
+                    Listing.starts_at == candidate.starts_at,
+                    Listing.id != candidate.id,
+                    Listing.duplicate_of.is_(None),
+                )
+            )
+            .order_by(Listing.id.asc())
+            .limit(1)
+        )
+
+        if canonical is None:
+            # No other canonical row matches. This row stands alone.
+            # Clear any stale dup link.
+            if candidate.duplicate_of is not None:
+                candidate.duplicate_of = None
+                marked += 1
+            continue
+
+        if canonical.id < candidate.id:
+            # candidate is the newer duplicate; canonical is the older original.
+            if candidate.duplicate_of != canonical.id:
+                candidate.duplicate_of = canonical.id
+                marked += 1
+        # else: candidate is older than canonical — the other row's pass
+        # will mark itself. Skip.
+
+    if marked > 0:
+        log.info("duplicates_marked", source_slug=source_slug, count=marked)
+
+
+def persist_listings(
+    session: Session,
+    listings: Iterable[RawListing],
+    *,
+    source_slug: str,
+) -> dict[str, int]:
     """Persist a batch of listings. Returns counts of inserts/updates/errors."""
     counts = {"inserted": 0, "updated": 0, "errors": 0}
+
     for raw in listings:
         try:
             _id, was_inserted = persist_listing(session, raw, source_slug=source_slug)
@@ -134,6 +205,16 @@ def persist_listings(session: Session, listings: Iterable[RawListing], *,
         except Exception as e:
             log.warning("persist_failed", source_url=raw.source_url, error=str(e))
             counts["errors"] += 1
+
+    # Dedup pass: mark any new rows whose (title, starts_at) collide with
+    # an existing canonical row. Runs in the same session, committed below.
+    _mark_duplicates(session, source_slug=source_slug)
+
     session.commit()
-    log.info("persist_batch_complete", **counts)
+    log.info(
+        "persist_batch_complete",
+        inserted=counts["inserted"],
+        updated=counts["updated"],
+        errors=counts["errors"],
+    )
     return counts

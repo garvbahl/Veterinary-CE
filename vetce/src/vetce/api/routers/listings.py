@@ -41,6 +41,10 @@ def list_listings(
                        description="How many to return. Max 100."),
     offset: int = Query(default=0, ge=0,
                         description="How many to skip (for paging)."),
+    include_duplicates: bool = Query(
+        default=False,
+        description="If true, include listings marked as duplicates. Default: hide them.",
+    ),
     # --- filtering ---
     provider: str | None = Query(
         default=None,
@@ -122,6 +126,10 @@ def list_listings(
         conditions.append(
             (Listing.title.ilike(pattern)) | (Listing.description.ilike(pattern))
         )
+
+    # Hide duplicates by default.
+    if not include_duplicates:
+        conditions.append(Listing.duplicate_of.is_(None))
 
     if conditions:
         stmt = stmt.where(and_(*conditions))

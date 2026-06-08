@@ -21,6 +21,11 @@ class Listing(Base):
     # ---- Relationships ----
     provider_id: Mapped[int] = mapped_column(ForeignKey("providers.id"), index=True)
     source_id: Mapped[int] = mapped_column(ForeignKey("sources.id"), index=True)
+    duplicate_of: Mapped[int | None] = mapped_column(
+        ForeignKey("listings.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     # ---- Identity ----
     source_url: Mapped[str] = mapped_column(String(1000), unique=True, index=True)
