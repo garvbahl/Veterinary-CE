@@ -85,16 +85,37 @@ class BaseScraper(ABC):
         for detail pages if needed.
         """
 
-    # ---- Orchestration (rarely overridden) ----
+    def list_pages(self) -> Iterable[str]:
+        """Yield each listings-page URL to fetch.
+
+        Default: single page at LISTINGS_URL. Override for paginated sites.
+        Subclasses that paginate should yield URLs one at a time; the loop
+        stops the moment a page yields no listings.
+        """
+        yield self.LISTINGS_URL
 
     def scrape(self) -> Iterable[RawListing]:
-        """Fetch the listings page and delegate to extract_listings.
+        """Fetch each listings page and delegate to extract_listings.
 
-        This is what run_ingest() calls.
+        Stops paginating as soon as a page yields zero listings — this lets
+        subclasses set a generous MAX_PAGES without paying for empty fetches
+        beyond the real end.
         """
         with self.make_client() as client:
-            html = self.fetch(self.LISTINGS_URL, client)
-            yield from self.extract_listings(html, client)
+            for url in self.list_pages():
+                html = self.fetch(url, client)
+                page_count = 0
+                for listing in self.extract_listings(html, client):
+                    page_count += 1
+                    yield listing
+                if page_count == 0:
+                    # Empty page → assume we've gone past the end. Stop early.
+                    log.info(
+                        "scrape_paginate_stop",
+                        scraper=self.SOURCE_SLUG,
+                        url=url,
+                    )
+                    break
 
     def run(self) -> dict[str, int]:
         """Configure logging, run the ingest pipeline, return the counts.

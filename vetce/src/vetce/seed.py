@@ -62,6 +62,20 @@ SEED_DATA = [
             },
         ],
     },
+    {
+        "provider": {
+            "slug": "vetvine",
+            "name": "VetVine",
+            "website": "https://www.vetvine.com",
+        },
+        "sources": [
+            {
+                "slug": "vetvine_videos_on_demand",
+                "kind": "scraper",
+                "description": "VetVine Videos on Demand catalog (paginated)",
+            },
+        ],
+    },
 ]
 
 
