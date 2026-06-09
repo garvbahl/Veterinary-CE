@@ -32,6 +32,11 @@ class Listing(Base):
 
     # ---- Core content ----
     title: Mapped[str] = mapped_column(String(500))
+    normalized_title: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        index=True,
+    )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # ---- Schedule (for live events) ----

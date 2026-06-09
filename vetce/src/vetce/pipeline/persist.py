@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from vetce.logging import log
 from vetce.models import Listing, Provider, Source
 from vetce.scrapers.types import RawListing
+from vetce.pipeline.dedup import normalize_title, jaccard_similarity
 
 
 # RACE program numbers are typically 6-7 digits. Anything else is suspect.
@@ -124,67 +125,136 @@ def persist_listing(
     return listing_id, was_inserted
 
 
+# Fuzzy dedup threshold. Token-Jaccard above this counts as a duplicate.
+_FUZZY_THRESHOLD = 0.90
+
+
 def _mark_duplicates(session: Session, source_slug: str) -> None:
-    """Identify exact-match duplicates among listings for this source.
+    """Identify duplicates for listings from this source.
 
-    Two listings are duplicates if they share the same title AND same starts_at
-    (both non-null). The older row (lower id) is canonical; newer rows get
-    duplicate_of set to the canonical's id.
+    Two-pass approach:
+      Pass 1 (exact-match on normalized title): catches case/punctuation/whitespace variants.
+      Pass 2 (fuzzy match via Jaccard ≥ 0.85): catches added/dropped words.
 
-    Rows from this source are checked against ALL listings in the database,
-    not just other rows from this source.
+    Date handling for both passes:
+      - If both rows have starts_at → dates must match exactly.
+      - If both rows have starts_at IS NULL → match on title alone.
+      - If asymmetric (one has, one doesn't) → don't match.
+
+    Canonical rule: older row (lower id) wins. Newer rows get duplicate_of set.
     """
     source = session.scalar(select(Source).where(Source.slug == source_slug))
     if source is None:
         log.warning("mark_duplicates_unknown_source", source_slug=source_slug)
         return
 
-    # All listings from this source that have a starts_at — candidates for dedup.
+    # Candidates: every listing from this source. (Includes on-demand rows.)
     candidates = session.scalars(
-        select(Listing).where(
-            and_(
-                Listing.source_id == source.id,
-                Listing.starts_at.is_not(None),
-            )
-        )
+        select(Listing).where(Listing.source_id == source.id)
     ).all()
 
-    marked = 0
+    marked_exact = 0
+    marked_fuzzy = 0
+
     for candidate in candidates:
-        # Find the oldest canonical row matching this (title, starts_at).
-        canonical = session.scalar(
-            select(Listing)
-            .where(
-                and_(
-                    Listing.title == candidate.title,
-                    Listing.starts_at == candidate.starts_at,
-                    Listing.id != candidate.id,
-                    Listing.duplicate_of.is_(None),
-                )
-            )
-            .order_by(Listing.id.asc())
-            .limit(1)
-        )
-
-        if canonical is None:
-            # No other canonical row matches. This row stands alone.
-            # Clear any stale dup link.
-            if candidate.duplicate_of is not None:
-                candidate.duplicate_of = None
-                marked += 1
-            continue
-
-        if canonical.id < candidate.id:
-            # candidate is the newer duplicate; canonical is the older original.
+        canonical = _find_canonical_exact(session, candidate)
+        if canonical is not None and canonical.id < candidate.id:
             if candidate.duplicate_of != canonical.id:
                 candidate.duplicate_of = canonical.id
-                marked += 1
-        # else: candidate is older than canonical — the other row's pass
-        # will mark itself. Skip.
+                marked_exact += 1
+            continue  # Don't double-mark with fuzzy.
 
-    if marked > 0:
-        log.info("duplicates_marked", source_slug=source_slug, count=marked)
+        canonical = _find_canonical_fuzzy(session, candidate)
+        if canonical is not None and canonical.id < candidate.id:
+            if candidate.duplicate_of != canonical.id:
+                candidate.duplicate_of = canonical.id
+                marked_fuzzy += 1
+            continue
 
+        # No match. Clear any stale link.
+        if candidate.duplicate_of is not None:
+            candidate.duplicate_of = None
+
+    if marked_exact or marked_fuzzy:
+        log.info(
+            "duplicates_marked",
+            source_slug=source_slug,
+            exact=marked_exact,
+            fuzzy=marked_fuzzy,
+        )
+
+
+def _find_canonical_exact(session: Session, candidate: Listing) -> Listing | None:
+    """Find an older row matching candidate on (normalized_title, starts_at).
+
+    Returns the oldest canonical (non-duplicate) match, or None.
+    """
+    if not candidate.normalized_title:
+        return None
+
+    conditions = [
+        Listing.normalized_title == candidate.normalized_title,
+        Listing.id != candidate.id,
+        Listing.duplicate_of.is_(None),
+    ]
+    if candidate.starts_at is not None:
+        conditions.append(Listing.starts_at == candidate.starts_at)
+    else:
+        conditions.append(Listing.starts_at.is_(None))
+
+    return session.scalar(
+        select(Listing)
+        .where(and_(*conditions))
+        .order_by(Listing.id.asc())
+        .limit(1)
+    )
+
+
+def _find_canonical_fuzzy(session: Session, candidate: Listing) -> Listing | None:
+    """Find an older row whose normalized_title has Jaccard ≥ threshold
+    with the candidate's normalized_title, with matching date rules.
+
+    Returns the oldest canonical match above threshold, or None.
+
+    O(N) over the database. For our scale (<10k rows) this is fine; revisit
+    if we ever cross that threshold.
+    """
+    if not candidate.normalized_title:
+        return None
+
+    # Pull all *other* canonical rows with matching date semantics.
+    conditions = [
+        Listing.id != candidate.id,
+        Listing.duplicate_of.is_(None),
+        Listing.normalized_title.is_not(None),
+    ]
+    if candidate.starts_at is not None:
+        conditions.append(Listing.starts_at == candidate.starts_at)
+    else:
+        conditions.append(Listing.starts_at.is_(None))
+
+    candidates_other = session.scalars(
+        select(Listing).where(and_(*conditions)).order_by(Listing.id.asc())
+    ).all()
+
+    best_match: Listing | None = None
+    best_score = 0.0
+    for other in candidates_other:
+        score = jaccard_similarity(
+            candidate.normalized_title, other.normalized_title
+        )
+        if score >= _FUZZY_THRESHOLD and score > best_score:
+            best_match = other
+            best_score = score
+
+    if best_match is not None:
+        log.info(
+            "fuzzy_match_found",
+            candidate_id=candidate.id,
+            canonical_id=best_match.id,
+            score=round(best_score, 3),
+        )
+    return best_match
 
 def persist_listings(
     session: Session,
