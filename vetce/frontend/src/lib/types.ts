@@ -83,3 +83,46 @@ export type ListingsQuery = {
   sort?: "id" | "title" | "starts_at" | "credit_hours";
   order?: "asc" | "desc";
 };
+
+// ============================================================
+// Dashboard / Operations
+// ============================================================
+
+export interface ProviderListingCount {
+  provider_slug: string;
+  provider_name: string;
+  listing_count: number;
+}
+
+export interface DashboardSummary {
+  total_listings: number;
+  duplicate_listings: number;
+  canonical_listings: number;
+
+  runs_last_24h_total: number;
+  runs_last_24h_success: number;
+  runs_last_24h_partial: number;
+  runs_last_24h_failed: number;
+  runs_last_24h_running: number;
+
+  by_provider: ProviderListingCount[];
+
+  health_status: "green" | "yellow" | "red";
+  health_reason: string | null;
+}
+
+export interface SourceStatus {
+  source_id: number;
+  source_slug: string;
+  provider_slug: string;
+  provider_name: string;
+  listing_count: number;
+
+  last_run_started_at: string | null;     // ISO datetime
+  last_run_finished_at: string | null;    // ISO datetime
+  last_run_status: string | null;
+  last_run_duration_seconds: number | null;
+
+  last_successful_run_at: string | null;  // ISO datetime
+  last_error_message: string | null;
+}

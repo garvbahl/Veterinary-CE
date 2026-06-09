@@ -9,12 +9,14 @@
  *   const page = await fetchListings({ provider: "navta", limit: 20 });
  */
 import type {
+  DashboardSummary,
   Listing,
   ListingsPage,
   ListingsQuery,
   Provider,
   ScrapeRun,
   Source,
+  SourceStatus,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -120,8 +122,19 @@ export function fetchScrapeRuns(query?: {
   return apiGet<ScrapeRun[]>("/api/v1/scrape_runs", query);
 }
 
+// ===== Dashboard (admin) =====
+
+export function fetchDashboardSummary(): Promise<DashboardSummary> {
+  return apiGet<DashboardSummary>("/api/v1/scrape_runs/dashboard");
+}
+
+export function fetchSourceStatuses(): Promise<SourceStatus[]> {
+  return apiGet<SourceStatus[]>("/api/v1/scrape_runs/by-source");
+}
+
 // ===== Meta =====
 
 export function fetchHealth(): Promise<{ ok: boolean; now: string }> {
   return apiGet<{ ok: boolean; now: string }>("/health");
 }
+

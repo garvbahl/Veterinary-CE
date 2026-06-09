@@ -184,3 +184,58 @@ class ScrapeRunOut(BaseModel):
             listings_errored=run.listings_errored,
             error_message=run.error_message,
         )
+        
+# ============================================================
+# Dashboard / Operations
+# ============================================================
+
+class ProviderListingCount(BaseModel):
+    """A provider name + its current listing count."""
+    provider_slug: str
+    provider_name: str
+    listing_count: int
+
+
+class DashboardSummary(BaseModel):
+    """Top-level dashboard health summary.
+
+    Combines totals, last-24h activity counts, per-provider breakdown,
+    and an overall health verdict with a human-readable reason.
+    """
+    total_listings: int = Field(description="Total non-duplicate listings.")
+    duplicate_listings: int = Field(description="Count of listings marked as duplicates of another row.")
+    canonical_listings: int = Field(description="Listings not marked as duplicates.")
+
+    runs_last_24h_total: int
+    runs_last_24h_success: int
+    runs_last_24h_partial: int
+    runs_last_24h_failed: int
+    runs_last_24h_running: int
+
+    by_provider: list[ProviderListingCount]
+
+    health_status: str = Field(description="One of 'green', 'yellow', 'red'.")
+    health_reason: Optional[str] = Field(
+        default=None,
+        description="Human-readable explanation when status is yellow/red. None when green.",
+    )
+
+
+class SourceStatus(BaseModel):
+    """Per-source operational status row for the dashboard."""
+    source_id: int
+    source_slug: str
+    provider_slug: str
+    provider_name: str
+    listing_count: int
+
+    last_run_started_at: Optional[datetime] = None
+    last_run_finished_at: Optional[datetime] = None
+    last_run_status: Optional[str] = None
+    last_run_duration_seconds: Optional[float] = None
+
+    last_successful_run_at: Optional[datetime] = None
+    last_error_message: Optional[str] = Field(
+        default=None,
+        description="Error message from the most recent failed run, if any. None if no recent failures.",
+    )
