@@ -21,6 +21,8 @@ from vetce.api.schemas import (
     SourceStatus,
 )
 from vetce.models import Listing, Provider, ScrapeRun, Source
+from vetce.api.routers.admin_auth import require_admin
+from vetce.models import AdminSession
 
 
 router = APIRouter(prefix="/scrape_runs", tags=["scrape_runs"])
@@ -43,6 +45,7 @@ def list_scrape_runs(
         description="Optional status filter: success | partial | failed | running",
     ),
     session: Session = Depends(get_session),
+    _admin: AdminSession = Depends(require_admin),
 ) -> list[ScrapeRunOut]:
     stmt = (
         select(ScrapeRun)
@@ -69,7 +72,10 @@ def list_scrape_runs(
     response_model=DashboardSummary,
     summary="Top-level dashboard summary: totals, 24h activity, health verdict",
 )
-def get_dashboard_summary(session: Session = Depends(get_session)) -> DashboardSummary:
+def get_dashboard_summary(
+    session: Session = Depends(get_session),
+    _admin: AdminSession = Depends(require_admin),
+) -> DashboardSummary:
     """Compute the dashboard summary.
 
     Single endpoint; queries are independent so we do them sequentially.
@@ -150,7 +156,10 @@ def get_dashboard_summary(session: Session = Depends(get_session)) -> DashboardS
     response_model=list[SourceStatus],
     summary="Per-source operational status: last run, listing count, last error",
 )
-def get_status_by_source(session: Session = Depends(get_session)) -> list[SourceStatus]:
+def get_status_by_source(
+    session: Session = Depends(get_session),
+    _admin: AdminSession = Depends(require_admin),
+) -> list[SourceStatus]:
     """One row per active source. Heavy-ish — does up to 3 lookups per source.
 
     With <10 sources this is fine. Becomes a problem at ~100; if we ever hit

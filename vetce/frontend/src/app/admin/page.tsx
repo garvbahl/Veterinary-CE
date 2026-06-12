@@ -13,12 +13,16 @@ import Link from "next/link";
 import { HealthIndicator } from "@/components/HealthIndicator";
 import { RunStatusBadge } from "@/components/RunStatusBadge";
 import {
+  ApiError,
   fetchDashboardSummary,
   fetchScrapeRuns,
   fetchSourceStatuses,
 } from "@/lib/api";
 import { absoluteTime, formatDuration, relativeTime } from "@/lib/time";
 import type { DashboardSummary, ScrapeRun, SourceStatus } from "@/lib/types";
+import { redirect } from "next/navigation";
+import { LogoutButton } from "@/components/LogoutButton";
+
 
 export const metadata = {
   title: "Admin — PerioVive CE",
@@ -40,6 +44,12 @@ export default async function AdminPage() {
     sources = src;
     runs = r;
   } catch (err) {
+    // If the error is "Not authenticated" (401), redirect to login.
+    // Server components can call redirect() to trigger a redirect response.
+    if (err instanceof ApiError && err.status === 401) {
+      redirect("/admin/login");
+    }
+
     return (
       <main className="mx-auto max-w-6xl px-6 py-12">
         <h1 className="text-2xl font-bold text-ink-900">Admin</h1>
@@ -59,10 +69,11 @@ export default async function AdminPage() {
         <h1 className="text-3xl font-bold text-ink-900">
           Operations<span className="text-brand-500">.</span>
         </h1>
-        <div className="text-sm text-ink-500">
+        <div className="flex items-center gap-6 text-sm text-ink-500">
           <Link href="/listings" className="hover:text-brand-600">
             ← back to listings
           </Link>
+          <LogoutButton />
         </div>
       </div>
 

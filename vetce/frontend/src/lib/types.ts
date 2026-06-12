@@ -135,3 +135,15 @@ export interface SubscriberCreateResponse {
   ok: boolean;
   already_subscribed: boolean;
 }
+
+// ============================================================
+// Admin auth
+// ============================================================
+
+export interface AdminLoginResponse {
+  ok: boolean;
+}
+
+export interface AdminMeResponse {
+  authenticated: boolean;
+}
