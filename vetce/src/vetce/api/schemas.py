@@ -239,3 +239,21 @@ class SourceStatus(BaseModel):
         default=None,
         description="Error message from the most recent failed run, if any. None if no recent failures.",
     )
+    
+# ============================================================
+# Subscribers
+# ============================================================
+
+class SubscriberCreate(BaseModel):
+    """Request body for POST /subscribers."""
+    email: str = Field(min_length=3, max_length=320)
+
+
+class SubscriberCreateResponse(BaseModel):
+    """Response from POST /subscribers.
+
+    Always returns 200 with already_subscribed flag — we don't expose
+    whether an email is new vs. already in our list (privacy + spam prevention).
+    """
+    ok: bool = True
+    already_subscribed: bool

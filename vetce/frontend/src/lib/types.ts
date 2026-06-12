@@ -126,3 +126,12 @@ export interface SourceStatus {
   last_successful_run_at: string | null;  // ISO datetime
   last_error_message: string | null;
 }
+
+// ============================================================
+// Subscribers
+// ============================================================
+
+export interface SubscriberCreateResponse {
+  ok: boolean;
+  already_subscribed: boolean;
+}

@@ -17,6 +17,7 @@ import type {
   ScrapeRun,
   Source,
   SourceStatus,
+  SubscriberCreateResponse,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -130,6 +131,48 @@ export function fetchDashboardSummary(): Promise<DashboardSummary> {
 
 export function fetchSourceStatuses(): Promise<SourceStatus[]> {
   return apiGet<SourceStatus[]>("/api/v1/scrape_runs/by-source");
+}
+
+// ===== Subscribers =====
+
+export async function subscribeEmail(email: string): Promise<SubscriberCreateResponse> {
+  const url = new URL(`${API_BASE}/api/v1/subscribers`);
+
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      body: JSON.stringify({ email }),
+    });
+  } catch (networkErr) {
+    throw new ApiError(
+      0,
+      networkErr,
+      `Network error contacting ${url.host}: ${(networkErr as Error).message}`,
+    );
+  }
+
+  if (!response.ok) {
+    let detail: unknown = null;
+    try {
+      detail = await response.json();
+    } catch {
+      // body wasn't JSON
+    }
+    const detailObj = detail as { detail?: string } | null;
+    throw new ApiError(
+      response.status,
+      detail,
+      detailObj?.detail ?? `API ${response.status} on /subscribers`,
+    );
+  }
+
+  return (await response.json()) as SubscriberCreateResponse;
 }
 
 // ===== Meta =====
