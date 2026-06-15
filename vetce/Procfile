@@ -1,0 +1,2 @@
+release: uv run alembic upgrade head
+web: uv run uvicorn vetce.api.app:app --host 0.0.0.0 --port $PORT

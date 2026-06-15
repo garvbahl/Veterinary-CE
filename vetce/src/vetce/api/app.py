@@ -72,16 +72,23 @@ app = FastAPI(
 )
 
 
-# CORS — allow our frontend (and the Swagger UI on the same host) to call us.
-# In production these origins would be tightened to the actual frontend URL.
+import os
+
+# CORS allowed origins. Local dev defaults are baked in; production adds
+# the frontend URL via FRONTEND_URL env var.
+_cors_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+_frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+if _frontend_url:
+    _cors_origins.append(_frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",   # likely Next.js dev port
-        "http://localhost:5173",   # likely Vite dev port
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],

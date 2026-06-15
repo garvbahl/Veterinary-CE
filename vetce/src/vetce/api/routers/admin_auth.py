@@ -19,6 +19,8 @@ from vetce.config import settings
 from vetce.logging import log
 from vetce.models import AdminSession
 
+import os
+
 
 router = APIRouter(prefix="/admin", tags=["admin_auth"])
 
@@ -64,13 +66,18 @@ def login(
     session.add(admin_session)
     session.commit()
 
+    # In production over HTTPS, cookies must be `secure`. In local dev over HTTP,
+    # `secure=True` cookies are rejected by browsers. Toggle via env var.
+    
+    is_production = os.environ.get("ENVIRONMENT", "dev").lower() == "production"
+
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=token,
         max_age=int(SESSION_DURATION.total_seconds()),
-        httponly=True,    # not readable by JS — prevents XSS theft
-        samesite="lax",   # not sent on cross-site POSTs — basic CSRF defense
-        secure=False,     # True in production over HTTPS; False for local dev over HTTP
+        httponly=True,
+        samesite="lax" if not is_production else "none",
+        secure=is_production,
         path="/",
     )
     log.info("admin_login_succeeded", session_id=admin_session.id)
