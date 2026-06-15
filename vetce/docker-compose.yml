@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16
     container_name: vetce-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: vetce
       POSTGRES_PASSWORD: vetce_dev
