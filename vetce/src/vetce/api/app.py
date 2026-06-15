@@ -76,15 +76,36 @@ import os
 
 # CORS allowed origins. Local dev defaults are baked in; production adds
 # the frontend URL via FRONTEND_URL env var.
+import os
+import re
+
+# CORS allowed origins. Local dev defaults are baked in; production adds
+# the frontend URL via FRONTEND_URL env var.
 _cors_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
 ]
-_frontend_url = os.environ.get("FRONTEND_URL", "").strip()
+_frontend_url = os.environ.get("FRONTEND_URL", "").strip().rstrip("/")
 if _frontend_url:
     _cors_origins.append(_frontend_url)
+
+# Log for debugging
+log.info("cors_configured", origins=_cors_origins)
+
+# Vercel preview deployments use random subdomains under *.vercel.app.
+# Match all subdomains under periovive-ce*.vercel.app for convenience.
+_cors_origin_regex = r"^https://periovive-ce.*\.vercel\.app$"
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_origin_regex=_cors_origin_regex,
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(
     CORSMiddleware,
