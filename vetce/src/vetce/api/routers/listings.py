@@ -5,6 +5,7 @@ GET /api/v1/listings/{id}   — fetch one listing by id
 """
 from __future__ import annotations
 
+from datetime import date
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -44,6 +45,14 @@ def list_listings(
     include_duplicates: bool = Query(
         default=False,
         description="If true, include listings marked as duplicates. Default: hide them.",
+    ),
+    include_past: bool = Query(
+        default=False,
+        description=(
+            "If true, include listings whose start date has passed. "
+            "Default: hide past events. Listings without a start date "
+            "(on-demand content) are always included regardless of this flag."
+        ),
     ),
     # --- filtering ---
     provider: str | None = Query(
@@ -130,6 +139,19 @@ def list_listings(
     # Hide duplicates by default.
     if not include_duplicates:
         conditions.append(Listing.duplicate_of.is_(None))
+
+    # Hide past events by default. Three things are always shown regardless:
+    #   1. Listings without a start date (true unknown-date content)
+    #   2. Listings with starts_at in the future
+    #   3. On-demand content — the starts_at on these is the original broadcast
+    #      date, not an "expiration." A 2022 recorded webinar is still valid CE.
+    if not include_past:
+        today = date.today()
+        conditions.append(
+            (Listing.starts_at.is_(None))
+            | (Listing.starts_at >= today)
+            | (Listing.format == "on_demand")
+        )
 
     if conditions:
         stmt = stmt.where(and_(*conditions))
