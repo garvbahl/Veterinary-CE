@@ -1,4 +1,5 @@
 import type { Listing } from "@/lib/types";
+import { categoryLabel } from "@/lib/categories";
 
 /**
  * Single listing card for the browse page grid.
@@ -72,6 +73,9 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
       {/* Metadata badges */}
       <div className="mt-4 flex flex-wrap gap-2">
+        {listing.subject_category && (
+          <Badge label={categoryLabel(listing.subject_category)} tone="brand" />
+        )}
         {listing.credit_hours != null && (
           <Badge label={`${listing.credit_hours} CE credit${listing.credit_hours === 1 ? "" : "s"}`} tone="brand" />
         )}

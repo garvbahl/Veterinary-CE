@@ -54,6 +54,20 @@ def list_listings(
             "(on-demand content) are always included regardless of this flag."
         ),
     ),
+    include_non_dental: bool = Query(
+        default=False,
+        description=(
+            "If true, include listings tagged 'non_dental'. Default: hide them. "
+            "Useful for admin debugging or auditing AI tags."
+        ),
+    ),
+    category: str | None = Query(
+        default=None,
+        description=(
+            "Filter to one dental subcategory slug (e.g. 'periodontics'). "
+            "Overrides the default non_dental filter."
+        ),
+    ),
     # --- filtering ---
     provider: str | None = Query(
         default=None,
@@ -151,6 +165,16 @@ def list_listings(
             (Listing.starts_at.is_(None))
             | (Listing.starts_at >= today)
             | (Listing.format == "on_demand")
+        )
+        
+    # Default: hide non-dental listings. Admin can override with
+    # include_non_dental=true, or specify a category explicitly.
+    if category:
+        conditions.append(Listing.subject_category == category)
+    elif not include_non_dental:
+        conditions.append(
+            (Listing.subject_category != "non_dental")
+            & (Listing.subject_category.is_not(None))
         )
 
     if conditions:

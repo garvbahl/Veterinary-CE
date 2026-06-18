@@ -9,9 +9,10 @@ type FilterSidebarProps = {
   providers: Option[];
   audiences: Option[];
   formats: Option[];
+  categories: Option[];
 };
 
-export default function FilterSidebar({ providers, audiences, formats }: FilterSidebarProps) {
+export default function FilterSidebar({ providers, audiences, formats, categories }: FilterSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,8 +32,9 @@ export default function FilterSidebar({ providers, audiences, formats }: FilterS
   const currentAudience = searchParams.get("audience") ?? "";
   const currentFormat = searchParams.get("format") ?? "";
   const currentMinCredits = searchParams.get("min_credits") ?? "";
+  const currentCategory = searchParams.get("category") ?? "";
 
-  const hasActiveFilters = !!(currentProvider || currentAudience || currentFormat || currentMinCredits);
+  const hasActiveFilters = !!(currentProvider || currentAudience || currentFormat || currentMinCredits || currentCategory);
 
   return (
     <>
@@ -59,6 +61,19 @@ export default function FilterSidebar({ providers, audiences, formats }: FilterS
               value={opt.value}
               checked={currentProvider === opt.value}
               onChange={() => setParam("provider", opt.value)}
+            />
+          ))}
+        </FilterGroup>
+
+        <FilterGroup title="Dental Topic">
+          <RadioOption label="All topics" value="" checked={currentCategory === ""} onChange={() => setParam("category", null)} />
+          {categories.map((opt) => (
+            <RadioOption
+              key={opt.value}
+              label={opt.label}
+              value={opt.value}
+              checked={currentCategory === opt.value}
+              onChange={() => setParam("category", opt.value)}
             />
           ))}
         </FilterGroup>
@@ -145,9 +160,9 @@ function RadioOption({
       <span className={`flex-1 ${checked ? "text-ink-900 font-semibold" : "text-ink-600 group-hover:text-ink-900"} transition-colors`}>
         {label}
       </span>
-      {count !== undefined && (
+      {/* {count !== undefined && (
         <span className="text-xs text-ink-400">{count}</span>
-      )}
+      )} */}
     </label>
   );
 }

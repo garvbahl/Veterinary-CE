@@ -11,23 +11,13 @@ const FOOTER_COLUMNS = [
     title: "Browse",
     links: [
       { label: "All Listings", href: "/listings" },
-      { label: "By Provider", href: "/providers" },
       { label: "Upcoming Events", href: "/listings?sort=starts_at&order=asc" },
-    ],
-  },
-  {
-    title: "About",
-    links: [
-      { label: "How it Works", href: "/about" },
-      { label: "Coverage", href: "/providers" },
-      { label: "Data Sources", href: "/sources" },
     ],
   },
   {
     title: "Periovive",
     links: [
-      { label: "Main Site", href: "https://periovive-analytics.com" },
-      { label: "CE Webinars", href: "https://periovive-analytics.com/marketing-preview/ce" },
+      { label: "Main Site", href: "https://www.periovive.com" },
       { label: "Contact", href: "mailto:hello@periovive.com" },
     ],
   },
@@ -132,7 +122,7 @@ export default function Footer() {
 
       {/* Dark footer */}
       <footer className="bg-ink-900 text-ink-200">
-        <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-3 gap-8">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-baseline gap-1 text-white font-extrabold text-xl tracking-tight">
@@ -140,8 +130,8 @@ export default function Footer() {
               <span className="text-brand-400">.</span>
             </div>
             <p className="mt-4 text-sm leading-relaxed">
-              Aggregated veterinary continuing education from the providers
-              you trust.
+              Aggregated veterinary dental continuing education
+              from the providers you trust.
             </p>
           </div>
 

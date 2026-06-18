@@ -52,7 +52,12 @@ class Listing(Base):
     presenter: Mapped[str | None] = mapped_column(String(500), nullable=True)
     audience: Mapped[str | None] = mapped_column(String(64), nullable=True)
     delivery_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    subject_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    subject_category: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
+    subject_tagged_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     topics: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     registration_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 

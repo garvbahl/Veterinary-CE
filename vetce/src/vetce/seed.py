@@ -76,6 +76,27 @@ SEED_DATA = [
             },
         ],
     },
+    {
+        "provider": {
+            "slug": "periovive",
+            "name": "Periovive",
+            "website": "https://www.periovive.com",
+        },
+        "sources": [
+            {
+                "slug": "periovive_webinars",
+                "kind": "scraper",
+                "description": "Periovive upcoming webinars listing (periovive.com/webinars)",
+                "cron_expression": "0 3 * * *",  # daily at 03:00 UTC
+            },
+            {
+                "slug": "periovive_thinkific",
+                "kind": "scraper",
+                "description": "Periovive Thinkific course catalog (periovive.thinkific.com/collections)",
+                "cron_expression": "0 3 * * *",
+            },
+        ],
+    },
 ]
 
 

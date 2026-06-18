@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     admin_password: str = "garvii"  # set via ADMIN_PASSWORD env var
     environment: str = "dev"  # "dev" or "production"
     frontend_url: str = ""  # set in production
+    anthropic_api_key: str = ""
 
 
 settings = Settings()

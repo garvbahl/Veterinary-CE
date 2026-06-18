@@ -77,6 +77,7 @@ export type ListingsQuery = {
   source?: string;
   audience?: string;
   format?: string;
+  category?: string;
   min_credits?: number;
   max_credits?: number;
   q?: string;
