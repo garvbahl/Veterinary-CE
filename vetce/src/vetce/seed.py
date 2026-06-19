@@ -96,6 +96,22 @@ SEED_DATA = [
                 "cron_expression": "0 3 * * *",
             },
         ],
+        
+    },
+    {
+        "provider": {
+            "slug": "avdc",
+            "name": "American Veterinary Dental College",
+            "website": "https://avdc.org",
+        },
+        "sources": [
+            {
+                "slug": "avdc_events",
+                "kind": "scraper",
+                "description": "AVDC continuing education events (avdc.org/events)",
+                "cron_expression": "0 3 * * *",  # daily at 03:00 UTC
+            },
+        ],
     },
 ]
 

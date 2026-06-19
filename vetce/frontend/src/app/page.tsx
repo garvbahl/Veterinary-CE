@@ -6,17 +6,20 @@ export default async function Home() {
   // Fetch everything in parallel.
   let total = 0;
   let featured: Awaited<ReturnType<typeof fetchListings>>["items"] = [];
+  let periovive: Awaited<ReturnType<typeof fetchListings>>["items"] = [];
   let providers: Awaited<ReturnType<typeof fetchProviders>> = [];
 
   try {
-    const [allListings, upcomingPage, providersList] = await Promise.all([
+    const [allListings, upcomingPage, periovivePage, providersList] = await Promise.all([
       fetchListings({ limit: 1 }),
       fetchListings({ sort: "starts_at", order: "asc", limit: 3 }),
+      fetchListings({ provider: "periovive", sort: "id", order: "desc", limit: 3 }),
       fetchProviders(),
     ]);
     total = allListings.total;
     // Only show listings that actually have a start date (real upcoming events).
     featured = upcomingPage.items.filter((l) => l.starts_at !== null);
+    periovive = periovivePage.items;
     providers = providersList;
   } catch {
     // Render the page with empty data on backend failure — better than crashing.
@@ -56,6 +59,39 @@ export default async function Home() {
           </p>
         )}
       </section>
+
+      {/* ===== FROM PERIOVIVE ===== */}
+      {periovive.length > 0 && (
+        <section className="bg-gradient-to-b from-white to-brand-50/30">
+          <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
+              <div>
+                <p className="text-brand-600 font-semibold uppercase tracking-wide text-sm">
+                  From Periovive
+                </p>
+                <h2 className="mt-3 text-3xl md:text-4xl font-extrabold text-ink-900">
+                  Our latest courses<span className="text-brand-500">.</span>
+                </h2>
+                <p className="mt-3 text-ink-600 max-w-xl">
+                  Free RACE-approved CE on veterinary dentistry, from our own
+                  clinical team and invited specialists.
+                </p>
+              </div>
+              <Link
+                href="/listings?provider=periovive"
+                className="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+              >
+                See all Periovive CE →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {periovive.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ===== FEATURED LISTINGS ===== */}
       {featured.length > 0 && (
