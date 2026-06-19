@@ -42,11 +42,18 @@ function formatLabel(value: string | null): string {
 }
 
 export default function ListingCard({ listing }: { listing: Listing }) {
+  const isPeriovive = listing.provider === "Periovive";
   const dateLabel = formatDateRange(listing.starts_at, listing.ends_at);
   const cleanedDescription = (listing.description ?? "").replace(/\s+/g, " ").trim();
 
   return (
-    <article className="group rounded-2xl border border-ink-100 bg-white p-6 shadow-card hover:shadow-cardHover hover:border-brand-200 transition-all">
+      <article
+            className={`group rounded-2xl border bg-white p-6 shadow-card hover:shadow-cardHover transition-all ${
+              isPeriovive
+                ? "border-ink-100 border-l-4 border-l-brand-500 hover:border-brand-200 hover:border-l-brand-500"
+                : "border-ink-100 hover:border-brand-200"
+            }`}
+          >
       {/* Provider + date row */}
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-semibold text-brand-600 uppercase tracking-wide">
