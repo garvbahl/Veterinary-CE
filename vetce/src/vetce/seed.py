@@ -99,6 +99,21 @@ SEED_DATA = [
         
     },
     {
+    "provider": {
+        "slug": "adtc",
+        "name": "Animal Dental Training Center",
+        "website": "https://www.animaldentaltraining.com",
+    },
+    "sources": [
+        {
+            "slug": "adtc_courses",
+            "kind": "scraper",
+            "description": "ADTC veterinary dental CE courses (animaldentaltraining.com)",
+            "cron_expression": "0 3 * * *",
+        },
+    ],
+},
+    {
         "provider": {
             "slug": "avdc",
             "name": "American Veterinary Dental College",
