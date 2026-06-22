@@ -43,11 +43,13 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   if (typeof params.provider === "string") query.provider = params.provider;
   if (typeof params.audience === "string") query.audience = params.audience;
   if (typeof params.format === "string") query.format = params.format;
+  if (typeof params.category === "string") query.category = params.category;
   if (typeof params.min_credits === "string") {
     const n = Number(params.min_credits);
     if (!Number.isNaN(n)) query.min_credits = n;
   }
   if (typeof params.q === "string") query.q = params.q;
+  
 
   // Fetch listings (filtered) and providers (for the sidebar) in parallel.
  // Fetch listings (filtered) and providers (for the sidebar) in parallel.
