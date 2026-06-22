@@ -114,6 +114,36 @@ SEED_DATA = [
     ],
 },
     {
+    "provider": {
+        "slug": "silo_academy",
+        "name": "Silo Academy",
+        "website": "https://siloacademy.com",
+    },
+    "sources": [
+        {
+            "slug": "silo_academy_manual",
+            "kind": "manual",
+            "description": "Manual entries for Silo Academy CE courses (siloacademy.com)",
+            "cron_expression": None,
+        },
+    ],
+},
+{
+    "provider": {
+        "slug": "manual_misc",
+        "name": "Other",
+        "website": None,
+    },
+    "sources": [
+        {
+            "slug": "manual_misc",
+            "kind": "manual",
+            "description": "Catch-all manual entries (for orgs without a dedicated source).",
+            "cron_expression": None,
+        },
+    ],
+},
+    {
         "provider": {
             "slug": "avdc",
             "name": "American Veterinary Dental College",

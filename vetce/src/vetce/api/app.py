@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from vetce.api.routers import admin_auth, listings, providers, runs, sources, subscribers
+from vetce.api.routers import admin_auth, listings, providers, runs, sources, subscribers, admin_listings
 from vetce.logging import configure_logging, log
 
 
@@ -103,15 +103,7 @@ app.add_middleware(
     allow_origins=_cors_origins,
     allow_origin_regex=_cors_origin_regex,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -141,6 +133,7 @@ app.include_router(sources.router,   prefix="/api/v1")
 app.include_router(runs.router,      prefix="/api/v1")
 app.include_router(subscribers.router, prefix="/api/v1")
 app.include_router(admin_auth.router,  prefix="/api/v1")
+app.include_router(admin_listings.router, prefix="/api/v1")
 
 @app.get("/health", tags=["meta"], summary="Liveness probe")
 def health() -> dict:

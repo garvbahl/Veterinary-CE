@@ -207,6 +207,124 @@ export async function subscribeEmail(email: string): Promise<SubscriberCreateRes
   return (await response.json()) as SubscriberCreateResponse;
 }
 
+// ===== Admin: Listings (manual entry) =====
+
+export type ManualSource = {
+  id: number;
+  slug: string;
+  provider_name: string;
+};
+
+export type ListingCreatePayload = {
+  source_id: number;
+  title: string;
+  source_url: string;
+  description?: string | null;
+  starts_at?: string | null; // YYYY-MM-DD
+  ends_at?: string | null;
+  format?: string | null;
+  cost?: string | null;
+  race_approved?: boolean | null;
+  credit_hours?: number | null;
+  presenter?: string | null;
+  audience?: string | null;
+  registration_url?: string | null;
+  subject_category?: string | null;
+};
+
+export function fetchManualSources(): Promise<ManualSource[]> {
+  return apiGet<ManualSource[]>("/api/v1/admin/sources/manual");
+}
+
+export type ListingUpdatePayload = Partial<Omit<ListingCreatePayload, "source_id">> & {
+  status?: string;
+};
+
+export function fetchAdminListings(limit = 50): Promise<Listing[]> {
+  return apiGet<Listing[]>("/api/v1/admin/listings", { limit });
+}
+
+export async function updateListing(
+  id: number,
+  payload: ListingUpdatePayload,
+): Promise<Listing> {
+  const url = new URL(`${API_BASE}/api/v1/admin/listings/${id}`);
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+  } catch (networkErr) {
+    throw new ApiError(
+      0,
+      networkErr,
+      `Network error contacting ${url.host}: ${(networkErr as Error).message}`,
+    );
+  }
+  if (!response.ok) {
+    let detail: unknown = null;
+    try {
+      detail = await response.json();
+    } catch {
+      // body wasn't JSON
+    }
+    const detailObj = detail as { detail?: string } | null;
+    throw new ApiError(
+      response.status,
+      detail,
+      detailObj?.detail ?? `API ${response.status} on /admin/listings/${id}`,
+    );
+  }
+  return (await response.json()) as Listing;
+}
+
+export async function createListing(
+  payload: ListingCreatePayload,
+): Promise<Listing> {
+  const url = new URL(`${API_BASE}/api/v1/admin/listings`);
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+  } catch (networkErr) {
+    throw new ApiError(
+      0,
+      networkErr,
+      `Network error contacting ${url.host}: ${(networkErr as Error).message}`,
+    );
+  }
+  if (!response.ok) {
+    let detail: unknown = null;
+    try {
+      detail = await response.json();
+    } catch {
+      // body wasn't JSON
+    }
+    const detailObj = detail as { detail?: string } | null;
+    throw new ApiError(
+      response.status,
+      detail,
+      detailObj?.detail ?? `API ${response.status} on /admin/listings`,
+    );
+  }
+  return (await response.json()) as Listing;
+}
+
 // ===== Admin auth =====
 
 export async function adminLogin(password: string): Promise<AdminLoginResponse> {

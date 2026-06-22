@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const NAV_LINKS = [
   { label: "Browse CE", href: "/listings" },
+  { label: "Trainers", href: "/trainers" },
 ];
 
 export default function Header() {

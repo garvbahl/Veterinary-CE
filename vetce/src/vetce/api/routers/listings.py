@@ -153,6 +153,9 @@ def list_listings(
     # Hide duplicates by default.
     if not include_duplicates:
         conditions.append(Listing.duplicate_of.is_(None))
+        # Always hide non-active listings from public reads. Admin-edited
+        # "hidden" listings stay in the DB but disappear from /listings.
+        conditions.append(Listing.status == "active")
 
     # Hide past events by default. Three things are always shown regardless:
     #   1. Listings without a start date (true unknown-date content)

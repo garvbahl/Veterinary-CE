@@ -15,6 +15,7 @@ import { RunStatusBadge } from "@/components/RunStatusBadge";
 import {
   ApiError,
   fetchDashboardSummary,
+  fetchAdminListings,
   fetchScrapeRuns,
   fetchSourceStatuses,
 } from "@/lib/api";
@@ -33,16 +34,19 @@ export default async function AdminPage() {
   let summary: DashboardSummary | null = null;
   let sources: SourceStatus[] = [];
   let runs: ScrapeRun[] = [];
+  let recentListings: Awaited<ReturnType<typeof fetchAdminListings>> = [];
 
   try {
-    const [s, src, r] = await Promise.all([
+    const [s, src, r, recent] = await Promise.all([
       fetchDashboardSummary(),
       fetchSourceStatuses(),
       fetchScrapeRuns({ limit: 20 }),
+      fetchAdminListings(15),
     ]);
     summary = s;
     sources = src;
     runs = r;
+    recentListings = recent;
   } catch (err) {
     // If the error is "Not authenticated" (401), redirect to login.
     // Server components can call redirect() to trigger a redirect response.
@@ -69,9 +73,15 @@ export default async function AdminPage() {
         <h1 className="text-3xl font-bold text-ink-900">
           Operations<span className="text-brand-500">.</span>
         </h1>
-        <div className="flex items-center gap-6 text-sm text-ink-500">
+       <div className="flex items-center gap-6 text-sm text-ink-500">
           <Link href="/listings" className="hover:text-brand-600">
             ← back to listings
+          </Link>
+          <Link
+            href="/admin/listings/new"
+            className="rounded-pill bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 text-sm font-semibold transition-colors"
+          >
+            + Add Listing
           </Link>
           <LogoutButton />
         </div>
@@ -156,6 +166,66 @@ export default async function AdminPage() {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Section: Recent listings (with edit links) */}
+      <section className="mt-10">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-ink-900">Recent listings</h2>
+          <Link
+            href="/listings?sort=id&order=desc"
+            className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+          >
+            See all →
+          </Link>
+        </div>
+        <div className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-ink-100">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-ink-50 text-xs font-medium uppercase tracking-wide text-ink-600">
+              <tr>
+                <th className="px-5 py-3">Title</th>
+                <th className="px-5 py-3">Provider</th>
+                <th className="px-5 py-3">Source</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Starts</th>
+                <th className="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-100">
+              {recentListings.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-8 text-center text-ink-500">
+                    No listings yet.
+                  </td>
+                </tr>
+              ) : (
+                recentListings.map((l) => (
+                  <tr key={l.id}>
+                    <td className="px-5 py-3 text-ink-900 max-w-md truncate" title={l.title}>
+                      {l.title}
+                    </td>
+                    <td className="px-5 py-3 text-ink-700">{l.provider}</td>
+                    <td className="px-5 py-3 text-xs text-ink-500">{l.source}</td>
+                    <td className="px-5 py-3 text-ink-700">
+                      {l.subject_category ?? <span className="text-ink-400">—</span>}
+                    </td>
+                    <td className="px-5 py-3 text-ink-700">
+                      {l.starts_at ?? <span className="text-ink-400">on demand</span>}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <Link
+                        href={`/admin/listings/${l.id}/edit`}
+                        className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      >
+                        Edit
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
