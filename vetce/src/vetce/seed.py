@@ -158,6 +158,36 @@ SEED_DATA = [
             },
         ],
     },
+    {
+       "provider": {
+           "slug": "animal_dental_care_co",
+           "name": "Animal Dental Care & Oral Surgery",
+           "website": "https://vetdentalclasses.com",
+       },
+       "sources": [
+           {
+               "slug": "animal_dental_care_manual",
+               "kind": "manual",
+               "description": "Manual entries for Animal Dental Care & Oral Surgery (Colorado).",
+               "cron_expression": None,
+           },
+       ],
+   },
+    {
+    "provider": {
+        "slug": "crown_vet_dentistry",
+        "name": "Crown Veterinary Dental Specialists",
+        "website": "https://crownvetdentistry.com",
+    },
+    "sources": [
+        {
+            "slug": "crown_vet_dentistry",
+            "kind": "scraper",
+            "description": "Crown Veterinary Dental Specialists CE courses (Charlotte, NC)",
+            "cron_expression": "0 3 * * *",
+        },
+    ],
+},
 ]
 
 
