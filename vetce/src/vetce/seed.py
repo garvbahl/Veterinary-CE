@@ -201,6 +201,12 @@ SEED_DATA = [
             "description": "Manual entries for VetFolio dental courses (powered by NAVC & VMX).",
             "cron_expression": None,
         },
+        {
+            "slug": "vetfolio_catalog",
+            "kind": "scraper",
+            "description": "VetFolio dental CE catalog (Thought Industries browse API, dental-filtered).",
+            "cron_expression": "0 3 * * *",
+        },
     ],
 },
     {
