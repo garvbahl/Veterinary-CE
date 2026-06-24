@@ -188,6 +188,36 @@ SEED_DATA = [
         },
     ],
 },
+    {
+    "provider": {
+        "slug": "vetfolio",
+        "name": "VetFolio",
+        "website": "https://www.vetfolio.com",
+    },
+    "sources": [
+        {
+            "slug": "vetfolio_manual",
+            "kind": "manual",
+            "description": "Manual entries for VetFolio dental courses (powered by NAVC & VMX).",
+            "cron_expression": None,
+        },
+    ],
+},
+    {
+    "provider": {
+        "slug": "illinois_cvm",
+        "name": "University of Illinois CVM",
+        "website": "https://vetmed.illinois.edu",
+    },
+    "sources": [
+        {
+            "slug": "illinois_cvm_dentistry",
+            "kind": "scraper",
+            "description": "University of Illinois College of Veterinary Medicine — Dentistry CE catalog",
+            "cron_expression": "0 3 * * *",
+        },
+    ],
+},
 ]
 
 
