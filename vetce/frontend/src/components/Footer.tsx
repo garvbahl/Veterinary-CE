@@ -12,6 +12,8 @@ const FOOTER_COLUMNS = [
     links: [
       { label: "All Listings", href: "/listings" },
       { label: "Upcoming Events", href: "/listings?sort=starts_at&order=asc" },
+      { label: "Trainers", href: "/trainers" },
+      { label: "More Dental CE", href: "/other-providers" },
     ],
   },
   {

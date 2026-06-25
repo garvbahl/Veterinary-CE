@@ -3,6 +3,7 @@ import Link from "next/link";
 const NAV_LINKS = [
   { label: "Browse CE", href: "/listings" },
   { label: "Trainers", href: "/trainers" },
+  { label: "More CE", href: "/other-providers" },
 ];
 
 export default function Header() {
