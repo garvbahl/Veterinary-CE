@@ -210,6 +210,21 @@ SEED_DATA = [
         ],
     },
     {
+        "provider": {
+            "slug": "tufts_cummings",
+            "name": "Tufts Cummings School of Veterinary Medicine",
+            "website": "https://vet.tufts.edu/continuing-education-programs",
+        },
+        "sources": [
+            {
+                "slug": "tufts_vet_ce",
+                "kind": "scraper",
+                "description": "Tufts Cummings vet CE (Canvas Catalog public JSON, dental-filtered by tagger).",
+                "cron_expression": "0 3 * * *",
+            },
+        ],
+    },
+    {
     "provider": {
         "slug": "vetfolio",
         "name": "VetFolio",
