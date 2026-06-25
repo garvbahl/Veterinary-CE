@@ -20,7 +20,7 @@ const FOOTER_COLUMNS = [
     title: "Periovive",
     links: [
       { label: "Main Site", href: "https://www.periovive.com" },
-      { label: "Contact", href: "mailto:hello@periovive.com" },
+      { label: "Contact", href: "mailto:info@periovive.com" },
     ],
   },
 ];

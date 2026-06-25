@@ -41,7 +41,16 @@ const TRAINERS: Trainer[] = [
     blurb:
       "Mobile specialty service bringing advanced dental and oral surgery directly to general practice clinics across the Greater Toronto Area.",
     region: "Toronto, Etobicoke, Mississauga, Oakville, Brampton, Burlington",
-    website: "https://toothythomson.ca",
+   website: "https://toothythomson.ca",
+  },
+  {
+    name: "Dr. Brett Beckman",
+    credentials: "DVM, FAVD, DAVDC, DAAPM",
+    org: "Veterinary Dentistry Inc.",
+    blurb:
+      "Board-certified veterinary dentist offering RACE-approved hands-on extraction wet labs and self-paced online dentistry courses for veterinarians and technicians.",
+    region: "Atlanta, GA & online",
+    website: "https://veterinarydentistry.net",
   },
 ];
 

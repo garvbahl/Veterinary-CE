@@ -85,6 +85,15 @@ const SEASONAL: Provider[] = [
     website: "https://learnvetdentistry.com",
     cta: "Visit Learn Vet Dentistry",
   },
+  {
+    name: "Vet CE You'll Use",
+    category: "On-Demand Courses",
+    blurb:
+      "Short, focused on-demand veterinary dentistry courses from Dr. Jennifer Mathis, DVM, DAVDC, covering practical topics for general practice teams.",
+    detail: "Browse and enroll in individual courses on their site.",
+    website: "https://courses.vetceyoulluse.com",
+    cta: "Visit Vet CE You'll Use",
+  },
 ];
 
 export default function OtherProvidersPage() {
