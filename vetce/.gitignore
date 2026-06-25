@@ -23,3 +23,6 @@ Thumbs.db
 
 # Project-specific
 *.log
+# Scraper scratch / debugging dumps
+*.html
+vetce/*.html
