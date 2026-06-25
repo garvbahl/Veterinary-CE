@@ -171,8 +171,14 @@ SEED_DATA = [
                "description": "Manual entries for Animal Dental Care & Oral Surgery (Colorado).",
                "cron_expression": None,
            },
-       ],
-   },
+           {
+                "slug": "vetdentalclasses",
+                "kind": "scraper",
+                "description": "Vet Dental Classes -- Dr. Patrick Vall DAVDC, Colorado Springs (WordPress course pages, dated wet labs).",
+                "cron_expression": "0 3 * * *",
+            },
+        ],
+    },
     {
     "provider": {
         "slug": "crown_vet_dentistry",
@@ -205,6 +211,21 @@ SEED_DATA = [
             "slug": "vetfolio_catalog",
             "kind": "scraper",
             "description": "VetFolio dental CE catalog (Thought Industries browse API, dental-filtered).",
+            "cron_expression": "0 3 * * *",
+        },
+    ],
+},
+    {
+    "provider": {
+        "slug": "vetandtech",
+        "name": "Vet and Tech",
+        "website": "https://www.vetandtech.com",
+    },
+    "sources": [
+        {
+            "slug": "vetandtech_webinars",
+            "kind": "scraper",
+            "description": "Vet and Tech RACE-approved veterinary webinars (Next.js __NEXT_DATA__, dental-filtered).",
             "cron_expression": "0 3 * * *",
         },
     ],
