@@ -195,6 +195,21 @@ SEED_DATA = [
     ],
 },
     {
+        "provider": {
+            "slug": "vdspets",
+            "name": "Veterinary Dental Specialties",
+            "website": "https://www.vdspets.com",
+        },
+        "sources": [
+            {
+                "slug": "vdspets",
+                "kind": "scraper",
+                "description": "Veterinary Dental Specialties -- Dr. Brook Niemiec, hands-on wet labs across US locations (WooCommerce Store API, upcoming-only).",
+                "cron_expression": "0 3 * * *",
+            },
+        ],
+    },
+    {
     "provider": {
         "slug": "vetfolio",
         "name": "VetFolio",
