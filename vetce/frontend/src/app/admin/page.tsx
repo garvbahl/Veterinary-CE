@@ -1,3 +1,4 @@
+"use client";
 /**
  * /admin — operations dashboard.
  *
@@ -21,50 +22,72 @@ import {
 } from "@/lib/api";
 import { absoluteTime, formatDuration, relativeTime } from "@/lib/time";
 import type { DashboardSummary, ScrapeRun, SourceStatus } from "@/lib/types";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
 
 
-export const metadata = {
-  title: "Admin — PerioVive CE",
-  robots: { index: false, follow: false },
-};
+export default function AdminPage() {
+  const router = useRouter();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [sources, setSources] = useState<SourceStatus[]>([]);
+  const [runs, setRuns] = useState<ScrapeRun[]>([]);
+  const [recentListings, setRecentListings] = useState<Awaited<ReturnType<typeof fetchAdminListings>>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function AdminPage() {
-  let summary: DashboardSummary | null = null;
-  let sources: SourceStatus[] = [];
-  let runs: ScrapeRun[] = [];
-  let recentListings: Awaited<ReturnType<typeof fetchAdminListings>> = [];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [s, src, r, recent] = await Promise.all([
+          fetchDashboardSummary(),
+          fetchSourceStatuses(),
+          fetchScrapeRuns({ limit: 20 }),
+          fetchAdminListings(15),
+        ]);
+        if (cancelled) return;
+        setSummary(s);
+        setSources(src);
+        setRuns(r);
+        setRecentListings(recent);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          router.push("/admin/login");
+          return;
+        }
+        if (!cancelled) setError((err as Error).message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
-  try {
-    const [s, src, r, recent] = await Promise.all([
-      fetchDashboardSummary(),
-      fetchSourceStatuses(),
-      fetchScrapeRuns({ limit: 20 }),
-      fetchAdminListings(15),
-    ]);
-    summary = s;
-    sources = src;
-    runs = r;
-    recentListings = recent;
-  } catch (err) {
-    // If the error is "Not authenticated" (401), redirect to login.
-    // Server components can call redirect() to trigger a redirect response.
-    if (err instanceof ApiError && err.status === 401) {
-      redirect("/admin/login");
-    }
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-6xl px-6 py-12">
+        <h1 className="text-2xl font-bold text-ink-900">Admin</h1>
+        <p className="mt-6 text-ink-500">Loading dashboard…</p>
+      </main>
+    );
+  }
 
+  if (error) {
     return (
       <main className="mx-auto max-w-6xl px-6 py-12">
         <h1 className="text-2xl font-bold text-ink-900">Admin</h1>
         <div className="mt-6 rounded-2xl bg-red-50 px-6 py-4 ring-1 ring-red-200">
           <div className="font-semibold text-red-700">Failed to load dashboard.</div>
-          <div className="mt-1 text-sm text-red-600">
-            {(err as Error).message}
-          </div>
+          <div className="mt-1 text-sm text-red-600">{error}</div>
         </div>
       </main>
     );
+  }
+  if (!summary) {
+    return null;
   }
 
   return (
