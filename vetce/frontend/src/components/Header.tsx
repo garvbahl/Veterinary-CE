@@ -13,10 +13,15 @@ export default function Header() {
         {/* Brand */}
         <Link
           href="/"
-          className="flex items-baseline gap-1 text-ink-900 font-extrabold text-xl tracking-tight"
+          className="flex flex-col leading-tight"
         >
-          <span>PerioVive CE</span>
-          <span className="text-brand-500">.</span>
+          <span className="text-ink-900 font-extrabold text-xl tracking-tight">
+            Veterinary Dentistry CE
+            <span className="text-brand-500">.</span>
+          </span>
+          <span className="text-[11px] font-medium text-ink-500 tracking-tight">
+            aggregated by PerioVive
+          </span>
         </Link>
 
         {/* Nav links */}

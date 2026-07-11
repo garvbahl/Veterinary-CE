@@ -30,7 +30,7 @@ export default async function Home() {
       {/* ===== HERO ===== */}
       <section className="max-w-6xl mx-auto px-6 py-24 md:py-32">
         <p className="text-brand-500 font-semibold uppercase tracking-wide text-sm">
-          Continuing Education
+          Veterinary Dentistry CE
         </p>
         <h1 className="mt-4 text-5xl md:text-7xl font-extrabold text-ink-900 max-w-3xl">
           Find your next CE
@@ -38,8 +38,9 @@ export default async function Home() {
           in seconds<span className="text-brand-500">.</span>
         </h1>
         <p className="mt-6 text-xl text-ink-600 max-w-2xl">
-          Aggregated veterinary continuing education listings from the providers
-          you trust. Filter by RACE credits, audience, format, and topic.
+          A directory of veterinary dentistry continuing education, aggregated by
+          PerioVive from providers across the profession. Filter by RACE credits,
+          audience, format, and topic.
         </p>
 
         <div className="mt-10 flex flex-wrap gap-4">
@@ -67,7 +68,7 @@ export default async function Home() {
             <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
               <div>
                 <p className="text-brand-600 font-semibold uppercase tracking-wide text-sm">
-                  From Periovive
+                  From PerioVive
                 </p>
                 <h2 className="mt-3 text-3xl md:text-4xl font-extrabold text-ink-900">
                   Our latest courses<span className="text-brand-500">.</span>
@@ -81,7 +82,7 @@ export default async function Home() {
                 href="/listings?provider=periovive"
                 className="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
               >
-                See all Periovive CE →
+                See all PerioVive CE →
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

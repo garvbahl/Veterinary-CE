@@ -7,8 +7,8 @@ import type { ListingsQuery, ListingsPage, Provider } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 
 export const metadata = {
-  title: "Browse CE Listings ΓÇö PerioVive CE",
-  description: "Browse veterinary continuing education listings from trusted providers.",
+  title: "Browse CE — Veterinary Dentistry CE, aggregated by PerioVive",
+  description: "Browse veterinary dentistry continuing education listings aggregated from providers across the profession.",
 };
 
 // Hardcoded for now ΓÇö these match what our scrapers produce.
@@ -81,12 +81,12 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             Browse
           </p>
           <h1 className="mt-3 text-4xl md:text-5xl font-extrabold text-ink-900">
-            Veterinary CE Listings<span className="text-brand-500">.</span>
+            Veterinary Dentistry CE<span className="text-brand-500">.</span>
           </h1>
           <p className="mt-4 text-lg text-ink-600 max-w-2xl">
-            All RACE-approved and informational CE opportunities we currently
-            track. Use the filters to narrow down by provider, audience, format,
-            or credits.
+            A directory of veterinary dentistry continuing education, aggregated
+            by PerioVive from providers across the profession. Use the filters to
+            narrow down by provider, audience, format, or credits.
           </p>
 
           {/* Search bar */}
@@ -124,7 +124,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                   listings
                 </>
               ) : (
-                "ΓÇö"
+                "—"
               )}
             </p>
             <SortSelect />
