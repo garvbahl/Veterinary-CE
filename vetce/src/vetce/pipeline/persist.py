@@ -101,6 +101,7 @@ def persist_listing(
         "race_program_number": _sanitize_race_number(raw.race_program_number),
         "credit_hours": _to_decimal(float(raw.credit_hours)) if raw.credit_hours is not None else None,
         "presenter": raw.presenter,
+        "presenter_image_url": raw.presenter_image_url,
         "audience": raw.audience,
         "delivery_method": raw.delivery_method,
         "subject_category": raw.subject_category,

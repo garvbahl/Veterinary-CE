@@ -23,6 +23,7 @@ export type Listing = {
   race_program_number: string | null;
   credit_hours: number | null;
   presenter: string | null;
+  presenter_image_url: string | null;
   audience: string | null;
   delivery_method: string | null;
   subject_category: string | null;

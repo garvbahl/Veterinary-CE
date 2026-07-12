@@ -26,6 +26,7 @@ class RawListing:
     race_program_number: str | None = None
     credit_hours: float | None = None
     presenter: str | None = None
+    presenter_image_url: str | None = None  # speaker headshot URL, when provided
     audience: str | None = None           # "vets", "techs", "vets and techs"
     delivery_method: str | None = None    # "Interactive Distance", "Non-interactive Distance", etc.
     subject_category: str | None = None   # RACE subject category

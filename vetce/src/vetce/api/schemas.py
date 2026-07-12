@@ -47,6 +47,7 @@ class ListingOut(BaseModel):
     race_program_number: Optional[str] = None
     credit_hours: Optional[float] = None
     presenter: Optional[str] = None
+    presenter_image_url: Optional[str] = None
     audience: Optional[str] = None
     delivery_method: Optional[str] = None
     subject_category: Optional[str] = None

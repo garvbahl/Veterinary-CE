@@ -50,6 +50,7 @@ class Listing(Base):
     race_program_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     credit_hours: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     presenter: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    presenter_image_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     audience: Mapped[str | None] = mapped_column(String(64), nullable=True)
     delivery_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
     subject_category: Mapped[str | None] = mapped_column(
