@@ -75,6 +75,7 @@ class ListingOut(BaseModel):
             race_program_number=listing.race_program_number,
             credit_hours=float(listing.credit_hours) if listing.credit_hours is not None else None,
             presenter=listing.presenter,
+            presenter_image_url=listing.presenter_image_url,
             audience=listing.audience,
             delivery_method=listing.delivery_method,
             subject_category=listing.subject_category,
