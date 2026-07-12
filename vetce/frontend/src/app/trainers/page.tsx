@@ -52,6 +52,15 @@ const TRAINERS: Trainer[] = [
     region: "Atlanta, GA & online",
     website: "https://veterinarydentistry.net",
   },
+  {
+    name: "The Tooth Fairies",
+    credentials: "Led by AVDC Diplomates",
+    org: "Four Legged Tooth Fairy",
+    blurb:
+      "Hands-on, RACE-approved dental wet labs in a dedicated workshop space, with individual equipment for every participant. Intensive extraction and oral pathology training for the whole vet team, taught by board-certified dentists.",
+    region: "Minneapolis, MN",
+    website: "https://fourleggedtoothfairy.com/continued-education/",
+  },
 ];
 
 export default function TrainersPage() {
