@@ -93,6 +93,19 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           <div className="mt-8 max-w-2xl">
             <SearchBar />
           </div>
+
+          {/* Submit-a-listing callout */}
+          <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-ink-500">Don&apos;t see your CE?</span>
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSdg3Jxpn2bH_5dMcj-ca4_pEQnWHJvCoTG1Iuu_4NEsR3mnsA/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+            >
+              Submit a listing →
+            </a>
+          </div>
         </div>
       </section>
 
