@@ -103,18 +103,6 @@ export default function FilterSidebar({ providers, audiences, formats, categorie
           ))}
         </FilterGroup>
 
-        <FilterGroup title="Format">
-          <RadioOption label="Any format" value="" checked={currentFormat === ""} onChange={() => setParam("format", null)} />
-          {formats.map((opt) => (
-            <RadioOption
-              key={opt.value}
-              label={opt.label}
-              value={opt.value}
-              checked={currentFormat === opt.value}
-              onChange={() => setParam("format", opt.value)}
-            />
-          ))}
-        </FilterGroup>
 
         <FilterGroup title="Minimum CE credits">
           <input
