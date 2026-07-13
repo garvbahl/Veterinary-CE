@@ -51,6 +51,18 @@ export default function FilterSidebar({ providers, audiences, formats, categorie
       </button>
 
       <aside className={`space-y-8 ${mobileOpen ? "block" : "hidden"} lg:block`}>
+        <FilterGroup title="Format">
+          <RadioOption label="Any format" value="" checked={currentFormat === ""} onChange={() => setParam("format", null)} />
+          {formats.map((opt) => (
+            <RadioOption
+              key={opt.value}
+              label={opt.label}
+              value={opt.value}
+              checked={currentFormat === opt.value}
+              onChange={() => setParam("format", opt.value)}
+            />
+          ))}
+        </FilterGroup>
         <FilterGroup title="Provider">
           <RadioOption label="All providers" value="" checked={currentProvider === ""} onChange={() => setParam("provider", null)} />
           {providers.map((opt) => (

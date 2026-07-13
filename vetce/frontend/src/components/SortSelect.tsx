@@ -3,12 +3,12 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 const OPTIONS = [
-  { value: "starts_at:asc", label: "Upcoming events first" },
-  { value: "starts_at:desc", label: "Latest events first" },
+  { value: "starts_at:asc", label: "Soonest events first" },
+  { value: "starts_at:desc", label: "Furthest-out events first" },
   { value: "credit_hours:desc", label: "Most credits first" },
   { value: "credit_hours:asc", label: "Fewest credits first" },
   { value: "title:asc", label: "Title A → Z" },
-  { value: "id:desc", label: "Newest added first" },
+  { value: "id:desc", label: "Recently added first" },
 ];
 
 export default function SortSelect() {
