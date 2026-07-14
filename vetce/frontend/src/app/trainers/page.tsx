@@ -61,6 +61,15 @@ const TRAINERS: Trainer[] = [
     region: "Minneapolis, MN",
     website: "https://fourleggedtoothfairy.com/continued-education/",
   },
+  {
+    name: "Midmark Academy",
+    credentials: "Manufacturer-led clinical training",
+    org: "Midmark Academy",
+    blurb:
+      "RACE-approved veterinary dental education combining in-clinic, hands-on workshops led by Midmark Academy instructors with online courses. Covers oral exams, cleaning, probing and charting, dental radiography positioning and interpretation, and whole-team dental workflow.",
+    region: "In-clinic (US) & online",
+    website: "https://www.midmark.com/animal-health/education-services-support/midmark-academy-clinical-training/course-offerings",
+  },
 ];
 
 export default function TrainersPage() {
