@@ -70,6 +70,24 @@ const TRAINERS: Trainer[] = [
     region: "In-clinic (US) & online",
     website: "https://www.midmark.com/animal-health/education-services-support/midmark-academy-clinical-training/course-offerings",
   },
+  {
+    name: "Mary Berg",
+    credentials: "BS, RVT, VTS (Dentistry)",
+    org: "Beyond the Crown Veterinary Education",
+    blurb:
+      "RACE-approved dental education through virtual and in-clinic training, helping technicians and veterinary teams build confidence in professional dental procedures. Textbook author and 2024 VMX Technician of the Year.",
+    region: "Lawrence, KS & online",
+    website: "https://www.btcveted.com",
+  },
+  {
+    name: "Jennifer Hertzoff",
+    credentials: "CVT",
+    org: "Veterinary Dentistry Training",
+    blurb:
+      "RACE-approved in-clinic and online dental training covering radiography positioning, professional cleaning, and instrument sharpening, drawing on 17+ years working alongside board-certified veterinary dentists.",
+    region: "Tempe, AZ & online",
+    website: "https://www.vetdentistrytraining.com",
+  },
 ];
 
 export default function TrainersPage() {
