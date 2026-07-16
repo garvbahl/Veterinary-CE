@@ -96,7 +96,21 @@ SEED_DATA = [
                 "cron_expression": "0 3 * * *",
             },
         ],
-        
+    },
+    {
+        "provider": {
+            "slug": "midmark",
+            "name": "Midmark Academy",
+            "website": "https://www.midmark.com/animal-health/education-services-support/midmark-academy-clinical-training/course-offerings",
+        },
+        "sources": [
+            {
+                "slug": "midmark_manual",
+                "kind": "manual",
+                "description": "Midmark Academy online dental CE courses (manually curated from midmark2.abaralms.net)",
+                "cron_expression": None,
+            },
+        ],
     },
     {
     "provider": {
