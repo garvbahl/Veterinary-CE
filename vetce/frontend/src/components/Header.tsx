@@ -19,8 +19,13 @@ export default function Header() {
             Veterinary Dentistry CE
             <span className="text-brand-500">.</span>
           </span>
-          <span className="text-[11px] font-medium text-ink-500 tracking-tight">
-            aggregated by PerioVive
+          <span className="text-[11px] font-medium text-ink-500 tracking-tight flex items-center gap-1">
+            by
+            <span className="font-extrabold tracking-tight text-[13px]">
+              <span className="text-ink-900">PERIO</span>
+              <span className="text-[#0FB4E7]">VIVE</span>
+              <span className="align-super text-[8px] text-ink-400">™</span>
+            </span>
           </span>
         </Link>
 
