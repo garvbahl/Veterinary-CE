@@ -9,7 +9,7 @@ from datetime import date
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from vetce.api.deps import get_session
@@ -189,9 +189,24 @@ def list_listings(
 
     # Apply sorting.
     sort_column = SORTABLE_FIELDS[sort]
-    stmt = stmt.order_by(
-        sort_column.desc() if order == "desc" else sort_column.asc()
-    )
+    if sort == "starts_at" and order == "asc":
+        # "Soonest events first": show genuine upcoming events (and undated
+        # on-demand content) before past-dated recordings, so a 2019 on-demand
+        # course doesn't sort above a 2026 live event. Within each group, sort
+        # by date ascending (nearest first); undated sorts last.
+        today = date.today()
+        stmt = stmt.order_by(
+            case(
+                (Listing.starts_at >= today, 0),   # upcoming -> first
+                (Listing.starts_at.is_(None), 1),  # undated on-demand -> middle
+                else_=2,                            # past-dated -> last
+            ).asc(),
+            Listing.starts_at.asc().nulls_last(),
+        )
+    else:
+        stmt = stmt.order_by(
+            sort_column.desc() if order == "desc" else sort_column.asc()
+        )
 
     # Apply pagination.
     stmt = stmt.limit(limit).offset(offset)
