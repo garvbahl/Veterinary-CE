@@ -25,6 +25,13 @@ export default async function Home() {
     // Render the page with empty data on backend failure — better than crashing.
   }
 
+  // For the "trusted providers" grid: hide empty providers, show the
+  // ones with the most listings first, capped to keep the grid tidy.
+  const featuredProviders = providers
+    .filter((p) => (p.listing_count ?? 0) > 0)
+    .sort((a, b) => (b.listing_count ?? 0) - (a.listing_count ?? 0))
+    .slice(0, 8);
+
   return (
     <main className="bg-white">
       {/* ===== HERO ===== */}
@@ -163,7 +170,7 @@ export default async function Home() {
             </p>
 
             <div className="mt-12 flex flex-wrap items-center justify-center gap-6">
-              {providers.map((p) => (
+                {featuredProviders.map((p) => (
                 <Link
                   key={p.slug}
                   href={`/listings?provider=${p.slug}`}
