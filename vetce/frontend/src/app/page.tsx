@@ -37,7 +37,7 @@ export default async function Home() {
       {/* ===== HERO ===== */}
       <section className="max-w-6xl mx-auto px-6 py-24 md:py-32">
         <p className="text-brand-500 font-semibold uppercase tracking-wide text-sm">
-          Veterinary Dentistry CE
+          Veterinary Dental CE
         </p>
         <h1 className="mt-4 text-5xl md:text-7xl font-extrabold text-ink-900 max-w-3xl">
           Find your next CE

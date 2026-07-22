@@ -16,7 +16,7 @@ export default function Header() {
           className="flex flex-col leading-tight"
         >
           <span className="text-ink-900 font-extrabold text-xl tracking-tight">
-            Veterinary Dentistry CE
+            Veterinary Dental CE
             <span className="text-brand-500">.</span>
           </span>
           <span className="text-[11px] font-medium text-ink-500 tracking-tight flex items-center gap-1">

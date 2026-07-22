@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Veterinary Dentistry CE | aggregated by PerioVive",
+  title: "Veterinary Dental CE | aggregated by PerioVive",
   description:
     "A directory of veterinary dentistry continuing education, aggregated by PerioVive from providers across the profession. Filter by RACE credits, audience, format, and topic.",
 };

@@ -27,7 +27,7 @@ export default function Footer() {
         <div className="col-span-2 md:col-span-1">
           <div className="flex flex-col leading-tight text-white font-extrabold text-xl tracking-tight">
             <span>
-              Veterinary Dentistry CE
+              Veterinary Dental CE
               <span className="text-brand-400">.</span>
             </span>
             <span className="text-xs font-medium text-ink-400 mt-1">
