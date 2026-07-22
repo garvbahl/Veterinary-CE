@@ -84,9 +84,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         <span className="font-semibold text-brand-600 uppercase tracking-wide">
           {providerLabel}
         </span>
-        {dateLabel && (
+        {dateLabel ? (
           <span className="text-ink-400 font-medium">{dateLabel}</span>
-        )}
+        ) : listing.format === "on_demand" ? (
+          <span className="text-ink-400 font-medium">On-Demand</span>
+        ) : null}
       </div>
 
       {/* Title */}
