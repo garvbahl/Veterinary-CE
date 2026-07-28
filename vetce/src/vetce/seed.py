@@ -113,6 +113,21 @@ SEED_DATA = [
         ],
     },
     {
+        "provider": {
+            "slug": "pawsitive",
+            "name": "Pawsitive Dental Education",
+            "website": "https://pawsitivedental.com",
+        },
+        "sources": [
+            {
+                "slug": "pawsitive_manual",
+                "kind": "manual",
+                "description": "Pawsitive Dental Education events (manually curated from pawsitivedental.com)",
+                "cron_expression": None,
+            },
+        ],
+    },
+    {
     "provider": {
         "slug": "adtc",
         "name": "Animal Dental Training Center",
