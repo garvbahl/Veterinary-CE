@@ -56,6 +56,15 @@ const ORGANIZATIONS: Provider[] = [
     cta: "Visit the Academy",
   },
   {
+    name: "Academy of Veterinary Dental Technicians (AVDT)",
+    category: "Professional Organization",
+    blurb:
+      "A NAVTA-accredited academy that credentials veterinary technicians as VTS (Dentistry) specialists. Members advance dental care in clinics and teach veterinary teams at conferences worldwide.",
+    detail: "Browse the member directory to find credentialed dental technician specialists.",
+    website: "https://www.avdt.us",
+    cta: "Visit the Academy",
+  },
+  {
     name: "Foundation for Veterinary Dentistry",
     category: "Professional Organization",
     blurb:
@@ -94,6 +103,7 @@ const SEASONAL: Provider[] = [
     website: "https://courses.vetceyoulluse.com",
     cta: "Visit Vet CE You'll Use",
   },
+  
 ];
 
 export default function OtherProvidersPage() {
