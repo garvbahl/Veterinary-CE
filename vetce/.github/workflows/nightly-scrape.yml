@@ -1,0 +1,33 @@
+name: Nightly scrape
+
+# Runs the full scraper + tagger pipeline once a night and emails a summary.
+on:
+  schedule:
+    # 03:00 UTC daily (= 11pm EDT / 8pm PDT the previous evening).
+    - cron: "0 3 * * *"
+  # Also allow running it by hand from the Actions tab for testing.
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run all scrapers + tag
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: uv run python -m vetce.pipeline.run_all
