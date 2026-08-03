@@ -142,6 +142,7 @@ SEED_DATA = [
         },
     ],
 },
+    
     {
     "provider": {
         "slug": "silo_academy",
@@ -235,6 +236,12 @@ SEED_DATA = [
                 "kind": "scraper",
                 "description": "Veterinary Dental Specialties -- Dr. Brook Niemiec, hands-on wet labs across US locations (WooCommerce Store API, upcoming-only).",
                 "cron_expression": "0 3 * * *",
+            },
+            {
+                "slug": "vds_thinkific",
+                "kind": "manual",
+                "description": "VDS virtual on-demand courses (vetdentaltraining.thinkific.com), manually curated",
+                "cron_expression": None,
             },
         ],
     },
