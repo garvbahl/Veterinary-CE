@@ -86,14 +86,18 @@ def _run_all_scrapers() -> list[SourceResult]:
     return results
 
 
-def _run_tagger() -> None:
+def _run_tagger() -> bool:
     """Tag newly scraped (untagged) listings. Scraping wipes subject_category,
     so this must run after the scrapers.
 
     Runs tag_all as a subprocess -- exactly how it's invoked manually
     (`python -m vetce.pipeline.tag_all`). This avoids argparse collisions with
     run_all's own arguments and keeps the tagger isolated in its own process.
-    Failures here are logged but don't abort the summary/email.
+
+    Returns True on success, False on failure. A tagger failure is serious: a
+    scrape wipes subject_category, and the listings API hides NULL-category
+    listings, so if the tagger doesn't run the whole site silently drops to a
+    handful of listings. The caller treats False as a hard failure.
     """
     import subprocess
     import sys
@@ -106,10 +110,12 @@ def _run_tagger() -> None:
         )
         if result.returncode != 0:
             log.error("run_all_tagger_nonzero_exit", code=result.returncode)
-        else:
-            log.info("run_all_tagger_done")
+            return False
+        log.info("run_all_tagger_done")
+        return True
     except Exception as e:
         log.error("run_all_tagger_failed", error=f"{type(e).__name__}: {e}")
+        return False
 
 
 def main() -> None:
@@ -124,8 +130,9 @@ def main() -> None:
 
     results = _run_all_scrapers()
 
+    tagger_ok = True
     if not args.no_tag:
-        _run_tagger()
+        tagger_ok = _run_tagger()
 
     elapsed = time.time() - t0
     failures = [r for r in results if not r.ok]
@@ -136,6 +143,7 @@ def main() -> None:
         total=len(results),
         failures=len(failures),
         zeros=len(zeros),
+        tagger_ok=tagger_ok,
         elapsed_sec=round(elapsed, 1),
     )
 
@@ -154,10 +162,18 @@ def main() -> None:
                 updated=r.updated,
             )
 
-    # Non-zero exit if anything failed, so the GitHub Actions run shows red.
-    # GitHub's built-in workflow-failure notifications then alert us -- no
-    # custom email needed.
-    if failures:
+    if not tagger_ok:
+        log.error(
+            "run_all_tagger_failure_is_critical",
+            hint="scraping wipes subject_category; without tagging, the site "
+                 "hides NULL-category listings and drops to a handful shown.",
+        )
+
+    # Non-zero exit if any scraper failed OR the tagger failed. A tagger failure
+    # is critical: it leaves listings NULL-categorized, which the API hides, so
+    # the site silently empties. Failing loudly triggers GitHub's built-in
+    # workflow-failure notification -- no custom email needed.
+    if failures or not tagger_ok:
         raise SystemExit(1)
 
 

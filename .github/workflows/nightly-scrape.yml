@@ -12,6 +12,11 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The Python project lives in the vetce/ subfolder of the repo, so run
+    # project commands there (pyproject.toml and uv.lock are in vetce/).
+    defaults:
+      run:
+        working-directory: vetce
 
     steps:
       - name: Check out repo
