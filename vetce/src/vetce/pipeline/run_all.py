@@ -16,10 +16,11 @@ Flow:
   2. Run the tagger (tag_all) so newly scraped listings get categories.
   3. Log a per-source summary, flagging failures and zero-result (silent) runs.
 
-Monitoring: the script exits non-zero if any scraper failed, so the GitHub
-Actions run is marked red. GitHub's built-in workflow-failure notifications
-then alert us -- no custom email system needed. Per-run detail is also visible
-in the scrape_runs table and in the Actions run log.
+Monitoring: the run exits non-zero (red GitHub run + built-in failure email) if
+the tagger fails, or if a majority of scrapers fail (a systemic problem). A few
+individual scraper failures -- expected in cloud scraping when a source blocks
+or changes -- are logged but tolerated, keeping the run green. Per-run detail is
+in the scrape_runs table and the Actions run log.
 """
 from __future__ import annotations
 
@@ -34,6 +35,15 @@ from vetce.db import SessionLocal
 from vetce.logging import configure_logging, log
 from vetce.models import Source
 from vetce.scrapers.registry import SCRAPER_REGISTRY
+
+
+# If more than this fraction of scrapers fail in one run, treat it as a
+# systemic problem (e.g. all datacenter IPs blocked, network down) and fail
+# the whole run. A few individual failures -- a site changed, one source
+# rate-limited or IP-blocked us -- are expected in cloud scraping and only get
+# logged, not escalated to a red run. The tagger failing ALWAYS fails the run
+# regardless, since that silently empties the site.
+SCRAPER_FAILURE_FRACTION_THRESHOLD = 0.5
 
 
 @dataclass
@@ -169,11 +179,37 @@ def main() -> None:
                  "hides NULL-category listings and drops to a handful shown.",
         )
 
-    # Non-zero exit if any scraper failed OR the tagger failed. A tagger failure
-    # is critical: it leaves listings NULL-categorized, which the API hides, so
-    # the site silently empties. Failing loudly triggers GitHub's built-in
-    # workflow-failure notification -- no custom email needed.
-    if failures or not tagger_ok:
+    # Decide whether this run counts as a failure.
+    #
+    # - Tagger failure -> ALWAYS fail. It leaves listings NULL-categorized, which
+    #   the API hides, so the site silently empties. This must be loud.
+    # - Scraper failures -> tolerate a few. Individual sources getting blocked,
+    #   rate-limited, or changing their HTML is normal in cloud scraping; the
+    #   other sources and the tagger still did their job. Only escalate to a
+    #   failed run if MOST scrapers failed, which signals a systemic issue
+    #   (network, all IPs blocked) rather than one flaky source.
+    total = len(results)
+    too_many_scrapers_failed = (
+        total > 0 and len(failures) / total > SCRAPER_FAILURE_FRACTION_THRESHOLD
+    )
+    if too_many_scrapers_failed:
+        log.error(
+            "run_all_too_many_scrapers_failed",
+            failed=len(failures),
+            total=total,
+            hint="a majority of scrapers failed -- likely systemic (network, "
+                 "IP blocks) rather than one flaky source.",
+        )
+    elif failures:
+        # Some failed, but within tolerance. Note it clearly, stay green.
+        log.warning(
+            "run_all_some_scrapers_failed_tolerated",
+            failed=len(failures),
+            total=total,
+            failed_sources=[r.slug for r in failures],
+        )
+
+    if not tagger_ok or too_many_scrapers_failed:
         raise SystemExit(1)
 
 
