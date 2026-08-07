@@ -61,6 +61,14 @@ def list_listings(
             "Useful for admin debugging or auditing AI tags."
         ),
     ),
+    featured: bool | None = Query(
+        default=None,
+        description=(
+            "If true, return only listings pinned as featured (preferred "
+            "placement), ordered by featured_rank. If false, exclude featured "
+            "listings. Default (None): no featured filtering."
+        ),
+    ),
     category: str | None = Query(
         default=None,
         description=(
@@ -162,13 +170,22 @@ def list_listings(
     #   2. Listings with starts_at in the future
     #   3. On-demand content — the starts_at on these is the original broadcast
     #      date, not an "expiration." A 2022 recorded webinar is still valid CE.
-    if not include_past:
+    # Featured queries skip the past-events filter: a pinned partner placement
+    # should surface even if its date has just passed, until it's un-featured.
+    if not include_past and not featured:
         today = date.today()
         conditions.append(
             (Listing.starts_at.is_(None))
             | (Listing.starts_at >= today)
             | (Listing.format == "on_demand")
         )
+
+    # Featured filtering. featured=True -> only pinned listings; featured=False
+    # -> exclude them; None -> no filtering.
+    if featured is True:
+        conditions.append(Listing.featured.is_(True))
+    elif featured is False:
+        conditions.append(Listing.featured.is_(False))
         
     # Default: hide non-dental listings. Admin can override with
     # include_non_dental=true, or specify a category explicitly.
@@ -189,7 +206,15 @@ def list_listings(
 
     # Apply sorting.
     sort_column = SORTABLE_FIELDS[sort]
-    if sort == "starts_at" and order == "asc":
+    if featured is True:
+        # Featured section: order by the manual rank (lower first, NULL last),
+        # then soonest date, then id as a stable tiebreaker.
+        stmt = stmt.order_by(
+            Listing.featured_rank.asc().nulls_last(),
+            Listing.starts_at.asc().nulls_last(),
+            Listing.id.asc(),
+        )
+    elif sort == "starts_at" and order == "asc":
         # "Soonest events first": show genuine upcoming events (and undated
         # on-demand content) before past-dated recordings, so a 2019 on-demand
         # course doesn't sort above a 2026 live event. Within each group, sort

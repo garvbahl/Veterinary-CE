@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy import String, Text, Boolean, Numeric, Date, DateTime, ForeignKey, func
+from sqlalchemy import String, Text, Boolean, Numeric, Date, DateTime, ForeignKey, func, false
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -68,6 +68,16 @@ class Listing(Base):
 
     # ---- Lifecycle ----
     status: Mapped[str] = mapped_column(String(32), default="active", index=True)
+    
+    # ---- Featured placement ----
+    # When True, the listing is pinned to the homepage "Featured" section and
+    # gets an accent treatment on its card. featured_rank orders multiple
+    # featured items (lower first, NULL last). Used for partner placements such
+    # as a webinar we've promised preferred placement to.
+    featured: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false(), nullable=False
+    )
+    featured_rank: Mapped[int | None] = mapped_column(nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

@@ -7,18 +7,22 @@ export default async function Home() {
   let total = 0;
   let featured: Awaited<ReturnType<typeof fetchListings>>["items"] = [];
   let periovive: Awaited<ReturnType<typeof fetchListings>>["items"] = [];
+  let upcoming: Awaited<ReturnType<typeof fetchListings>>["items"] = [];
   let providers: Awaited<ReturnType<typeof fetchProviders>> = [];
 
   try {
-    const [allListings, upcomingPage, periovivePage, providersList] = await Promise.all([
-      fetchListings({ limit: 1 }),
-      fetchListings({ sort: "starts_at", order: "asc", limit: 3 }),
-      fetchListings({ provider: "periovive", sort: "id", order: "desc", limit: 3 }),
-      fetchProviders(),
-    ]);
+    const [allListings, featuredPage, upcomingPage, periovivePage, providersList] =
+      await Promise.all([
+        fetchListings({ limit: 1 }),
+        fetchListings({ featured: true, limit: 3 }),
+        fetchListings({ sort: "starts_at", order: "asc", limit: 3 }),
+        fetchListings({ provider: "periovive", sort: "id", order: "desc", limit: 3 }),
+        fetchProviders(),
+      ]);
     total = allListings.total;
+    featured = featuredPage.items;
     // Only show listings that actually have a start date (real upcoming events).
-    featured = upcomingPage.items.filter((l) => l.starts_at !== null);
+    upcoming = upcomingPage.items.filter((l) => l.starts_at !== null);
     periovive = periovivePage.items;
     providers = providersList;
   } catch {
@@ -68,6 +72,32 @@ export default async function Home() {
         )}
       </section>
 
+      {/* ===== FEATURED (preferred placement) ===== */}
+      {featured.length > 0 && (
+        <section className="bg-gradient-to-b from-accent-gold/10 to-white border-b border-accent-gold/20">
+          <div className="max-w-6xl mx-auto px-6 py-20">
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
+              <div>
+                <p className="text-accent-gold font-semibold uppercase tracking-wide text-sm">
+                  Featured
+                </p>
+                <h2 className="mt-3 text-3xl md:text-4xl font-extrabold text-ink-900">
+                  Spotlight<span className="text-accent-gold">.</span>
+                </h2>
+                <p className="mt-3 text-ink-600 max-w-xl">
+                  Handpicked CE from partners across the profession.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featured.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ===== FROM PERIOVIVE ===== */}
       {periovive.length > 0 && (
         <section className="bg-gradient-to-b from-white to-brand-50/30">
@@ -101,8 +131,8 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ===== FEATURED LISTINGS ===== */}
-      {featured.length > 0 && (
+      {/* ===== UPCOMING LISTINGS ===== */}
+      {upcoming.length > 0 && (
         <section className="bg-brand-100/40 border-y border-brand-100">
           <div className="max-w-6xl mx-auto px-6 py-20">
             <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
@@ -119,7 +149,7 @@ export default async function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featured.map((listing) => (
+              {upcoming.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>

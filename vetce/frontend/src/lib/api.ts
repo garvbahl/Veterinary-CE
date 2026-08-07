@@ -238,6 +238,8 @@ export function fetchManualSources(): Promise<ManualSource[]> {
 
 export type ListingUpdatePayload = Partial<Omit<ListingCreatePayload, "source_id">> & {
   status?: string;
+  featured?: boolean;
+  featured_rank?: number | null;
 };
 
 export function fetchAdminListings(limit = 50): Promise<Listing[]> {

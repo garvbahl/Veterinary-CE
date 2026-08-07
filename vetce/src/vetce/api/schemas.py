@@ -51,6 +51,8 @@ class ListingOut(BaseModel):
     audience: Optional[str] = None
     delivery_method: Optional[str] = None
     subject_category: Optional[str] = None
+    featured: bool = False
+    featured_rank: Optional[int] = None
 
     @classmethod
     def from_listing(cls, listing: "Listing") -> "ListingOut":
@@ -79,6 +81,8 @@ class ListingOut(BaseModel):
             audience=listing.audience,
             delivery_method=listing.delivery_method,
             subject_category=listing.subject_category,
+            featured=listing.featured,
+            featured_rank=listing.featured_rank,
         )
 
 

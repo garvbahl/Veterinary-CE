@@ -54,6 +54,8 @@ export default function EditListingPage() {
   const [cost, setCost] = useState("");
   const [subjectCategory, setSubjectCategory] = useState("");
   const [status, setStatus] = useState("active");
+  const [featured, setFeatured] = useState(false);
+  const [featuredRank, setFeaturedRank] = useState("");
 
   useEffect(() => {
     if (!Number.isFinite(listingId)) {
@@ -76,6 +78,8 @@ export default function EditListingPage() {
         setRegistrationUrl(row.registration_url ?? "");
         setCost(row.cost ?? "");
         setSubjectCategory(row.subject_category ?? "");
+        setFeatured(row.featured === true);
+        setFeaturedRank(row.featured_rank != null ? String(row.featured_rank) : "");
       })
       .catch((err) => {
         if (err instanceof ApiError && err.status === 401) {
@@ -116,6 +120,8 @@ export default function EditListingPage() {
       registration_url: registrationUrl.trim() || null,
       subject_category: subjectCategory || null,
       status,
+      featured,
+      featured_rank: featured && featuredRank ? Number(featuredRank) : null,
     };
 
     setSubmitting(true);
@@ -206,6 +212,39 @@ export default function EditListingPage() {
               ))}
             </select>
           </Field>
+        </Section>
+
+        <Section title="Featured placement">
+          <Field
+            label="Featured"
+            hint="Pins this listing to the homepage Spotlight section with a gold accent. Use for partner placements such as a promised webinar slot."
+          >
+            <label className="flex items-center gap-2 text-sm text-ink-700">
+              <input
+                type="checkbox"
+                checked={featured}
+                onChange={(e) => setFeatured(e.target.checked)}
+                className="accent-accent-gold"
+              />
+              Feature this listing on the homepage
+            </label>
+          </Field>
+
+          {featured && (
+            <Field
+              label="Featured rank"
+              hint="Optional. Lower numbers show first when several listings are featured. Leave blank to sort by date."
+            >
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={featuredRank}
+                onChange={(e) => setFeaturedRank(e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+          )}
         </Section>
 
         <Section title="Schedule">

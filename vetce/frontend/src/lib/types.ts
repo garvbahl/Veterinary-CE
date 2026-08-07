@@ -27,6 +27,8 @@ export type Listing = {
   audience: string | null;
   delivery_method: string | null;
   subject_category: string | null;
+  featured: boolean;
+  featured_rank: number | null;
 };
 
 export type ListingsPage = {
@@ -82,6 +84,7 @@ export type ListingsQuery = {
   min_credits?: number;
   max_credits?: number;
   q?: string;
+  featured?: boolean;
   sort?: "id" | "title" | "starts_at" | "credit_hours";
   order?: "asc" | "desc";
 };

@@ -45,6 +45,10 @@ function formatLabel(value: string | null): string {
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   const isPeriovive = listing.provider.trim().toLowerCase() === "periovive";
+  // Featured = manually pinned for preferred placement. PerioVive's own cards
+  // already have a distinct brand treatment, so the gold featured accent only
+  // applies to non-PerioVive listings to avoid two competing accents.
+  const isFeatured = listing.featured && !isPeriovive;
   const providerLabel = isPeriovive ? "PerioVive" : listing.provider;
   const dateLabel = formatDateRange(listing.starts_at, listing.ends_at);
   const cleanedDescription = (listing.description ?? "").replace(/\s+/g, " ").trim();
@@ -57,9 +61,21 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       className={`group rounded-2xl border p-6 shadow-card hover:shadow-cardHover transition-all ${
         isPeriovive
           ? "bg-brand-50/40 border-ink-100 border-l-4 border-l-brand-500 hover:border-brand-200"
+          : isFeatured
+          ? "bg-accent-gold/5 border-accent-gold/40 border-l-4 border-l-accent-gold hover:border-accent-gold/60"
           : "bg-white border-ink-100 hover:border-brand-200"
       }`}
     >
+      {/* Featured badge (non-PerioVive pinned listings) */}
+      {isFeatured && (
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent-gold text-white px-2.5 py-1 text-xs font-bold tracking-wide">
+            <StarIcon />
+            Featured
+          </span>
+        </div>
+      )}
+
       {/* PerioVive badge */}
       {isPeriovive && (
         <div className="mb-3 flex items-center gap-2">
@@ -137,6 +153,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 }
 
 type BadgeTone = "brand" | "neutral" | "success";
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3" aria-hidden="true">
+      <path d="M12 2l2.9 6.26L21.5 9.3l-4.75 4.64 1.12 6.56L12 17.4l-5.87 3.1 1.12-6.56L2.5 9.3l6.6-1.04L12 2z" />
+    </svg>
+  );
+}
 
 function Badge({ label, tone }: { label: string; tone: BadgeTone }) {
   const styles: Record<BadgeTone, string> = {

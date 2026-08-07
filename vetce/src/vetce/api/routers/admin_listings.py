@@ -78,6 +78,8 @@ class ListingPatch(BaseModel):
     registration_url: Optional[str] = Field(default=None, max_length=1000)
     subject_category: Optional[str] = Field(default=None, max_length=100)
     status: Optional[str] = Field(default=None, max_length=32)
+    featured: Optional[bool] = None
+    featured_rank: Optional[int] = None
 
 
 # ============================================================
