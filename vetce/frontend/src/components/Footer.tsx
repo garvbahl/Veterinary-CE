@@ -3,11 +3,11 @@ import Link from "next/link";
 // Fill in each URL as the account access comes through from SocialDVM.
 // Leave a url as an empty string (or remove the entry) to hide that icon.
 const SOCIAL_LINKS = [
-  { label: "Facebook", href: "", icon: FacebookIcon },
-  { label: "Instagram", href: "", icon: InstagramIcon },
-  { label: "LinkedIn", href: "", icon: LinkedInIcon },
-  { label: "TikTok", href: "", icon: TikTokIcon },
-  { label: "YouTube", href: "", icon: YouTubeIcon },
+  { label: "Facebook", href: "https://www.facebook.com/veterinarydentalce/", icon: FacebookIcon },
+  { label: "Instagram", href: "https://www.instagram.com/veterinarydentalce", icon: InstagramIcon },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/veterinary-dental-ce", icon: LinkedInIcon },
+  { label: "TikTok", href: "https://www.tiktok.com/@veterinarydentalce", icon: TikTokIcon },
+  { label: "YouTube", href: "https://www.youtube.com/@veterinarydentalce", icon: YouTubeIcon },
 ];
 
 function FacebookIcon() {
