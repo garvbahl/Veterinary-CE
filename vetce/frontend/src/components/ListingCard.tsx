@@ -35,6 +35,14 @@ function formatDateRange(starts: string | null, ends: string | null): string | n
   return `${startStr} - ${endStr}`;
 }
 
+function formatMonthYear(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function formatLabel(value: string | null): string {
   if (!value) return "";
   return value
@@ -100,10 +108,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         <span className="font-semibold text-brand-600 uppercase tracking-wide">
           {providerLabel}
         </span>
-        {dateLabel ? (
+        {listing.format === "on_demand" ? (
+          <span className="text-ink-400 font-medium">
+            {listing.starts_at
+              ? `On-Demand · originally ${formatMonthYear(listing.starts_at)}`
+              : "On-Demand"}
+          </span>
+        ) : dateLabel ? (
           <span className="text-ink-400 font-medium">{dateLabel}</span>
-        ) : listing.format === "on_demand" ? (
-          <span className="text-ink-400 font-medium">On-Demand</span>
         ) : null}
       </div>
 
