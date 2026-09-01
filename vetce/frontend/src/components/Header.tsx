@@ -7,6 +7,7 @@ const NAV_LINKS = [
   { label: "Browse CE", href: "/listings" },
   { label: "Trainers", href: "/trainers" },
   { label: "More CE", href: "/other-providers" },
+  { label: "Our Partners", href: "/partners" },
 ];
 
 export default function Header() {
