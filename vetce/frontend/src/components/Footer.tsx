@@ -58,6 +58,7 @@ const FOOTER_COLUMNS = [
       { label: "Upcoming Events", href: "/listings?sort=starts_at&order=asc" },
       { label: "Trainers", href: "/trainers" },
       { label: "More Dental CE", href: "/other-providers" },
+      { label: "Our Partners", href: "/partners" },
     ],
   },
   {
