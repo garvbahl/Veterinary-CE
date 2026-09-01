@@ -199,7 +199,7 @@ export default function AdminPage() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-ink-900">Recent listings</h2>
           <Link
-            href="/listings?sort=id&order=desc"
+            href="/admin/listings"
             className="text-sm font-semibold text-brand-600 hover:text-brand-700"
           >
             See all →
