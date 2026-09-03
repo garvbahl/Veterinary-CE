@@ -86,6 +86,8 @@ _cors_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "https://veterinarydentalce.com",
+    "https://www.veterinarydentalce.com",
 ]
 _frontend_url = os.environ.get("FRONTEND_URL", "").strip().rstrip("/")
 if _frontend_url:
