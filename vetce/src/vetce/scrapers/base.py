@@ -117,12 +117,55 @@ class BaseScraper(ABC):
                     )
                     break
 
-    def run(self) -> dict[str, int]:
+    def run(self, tag_after: bool = True) -> dict[str, int]:
         """Configure logging, run the ingest pipeline, return the counts.
 
         Designed to be called from a scraper module's `__main__` block.
+
+        tag_after: if True (the default), runs the tagger as a subprocess
+        immediately after ingesting. Scraping wipes subject_category on every
+        row it touches, and the public API hides NULL-category listings --
+        so a scrape not followed by tagging leaves listings persisted but
+        silently invisible. Pass tag_after=False when the caller (e.g.
+        run_all.py) already tags everything in one batch after running
+        multiple scrapers, to avoid tagging redundantly per source.
         """
         configure_logging()
         counts = run_ingest(self.scrape, source_slug=self.SOURCE_SLUG)
         print(f"\nDone: {counts}")
+
+        if tag_after:
+            self._tag_untagged()
+
         return counts
+
+    def _tag_untagged(self) -> None:
+        """Run the tagger as a subprocess, exactly as invoked manually
+        (`python -m vetce.pipeline.tag_all`). Only touches listings where
+        subject_category IS NULL -- the tagger's own default behavior --
+        so this never re-tags or disturbs already-tagged listings from
+        other sources.
+        """
+        import subprocess
+        import sys
+
+        log.info("scraper_run_tagger_start", scraper=self.SOURCE_SLUG)
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "vetce.pipeline.tag_all"],
+                check=False,
+            )
+            if result.returncode != 0:
+                log.error(
+                    "scraper_run_tagger_nonzero_exit",
+                    scraper=self.SOURCE_SLUG,
+                    code=result.returncode,
+                )
+            else:
+                log.info("scraper_run_tagger_done", scraper=self.SOURCE_SLUG)
+        except Exception as e:
+            log.error(
+                "scraper_run_tagger_failed",
+                scraper=self.SOURCE_SLUG,
+                error=f"{type(e).__name__}: {e}",
+            )

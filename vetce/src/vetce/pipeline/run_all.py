@@ -75,7 +75,10 @@ def _run_all_scrapers() -> list[SourceResult]:
         name = scraper_cls.__name__
         log.info("run_all_scraper_start", scraper=name, slug=slug)
         try:
-            counts = scraper_cls().run()
+            # tag_after=False: run_all tags everything once in a single
+            # batch after this loop finishes, so each individual scraper
+            # shouldn't also trigger its own tagger subprocess.
+            counts = scraper_cls().run(tag_after=False)
             results.append(SourceResult(
                 slug=slug,
                 ok=counts.get("errors", 0) == 0,
